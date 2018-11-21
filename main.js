@@ -124,6 +124,14 @@ const drawAlien = () => {
     }
 }
 
+
+const alienMove = () => { // ALIEN MOVE FUNCTION
+    alienOffSetLeft+=dx; // EVERY INTERVAL MOVE 2PX HORIZONTALLY
+    if (alienOffSetLeft > canvas.width - alienWidth * alienColumnCount - 40 || alienOffSetLeft < 5){ // IF ALIENS MOVE WITHIN 40PX OF RIGHT HAND SIDE OR LESS THAN THE ALIEN OF SET LEFT
+        dx = -dx; // MOVE 2PX
+        alienOffSetTop +=dy // EACH TIME HITS LEFT/RIGHT MOVE DOWN 2PX
+}};
+
 const collisionDetection = () => {
     for (let c= 0;c<alienColumnCount;c++){
         for (let r = 0;r<alienRowCount;r++){
@@ -145,6 +153,7 @@ const collisionDetection = () => {
 }
 
 
+
 const draw = () => {  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawShip();
@@ -162,5 +171,7 @@ const draw = () => {
     
 
     x+=dx;
+    alienMove();        //  ELLIOT: FUNCTION CALLED FOR MOVING ALIENS
 };
+
 setInterval(draw,10);
