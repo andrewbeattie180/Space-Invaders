@@ -129,17 +129,19 @@ const collisionDetection = () => {
         for (let r = 0;r<alienRowCount;r++){
             var alien = aliens[c][r];
             if (alien.status == 1){             //If alien is alive
-                if(
-                    x > alien.x &&              //bullet dimensions are
-                    x < alien.x + alienWidth && //within the dimensions of
-                    y > alien.y &&              //the alien 
-                    y < alien.y + alienHeight
+                for (let i = 0;i<bullets.length;i++){
+                    if(
+                    bullets[i].x > alien.x &&              //bullet dimensions are
+                    bullets[i].x < alien.x + alienWidth && //within the dimensions of
+                    bullets[i].y > alien.y &&              //the alien 
+                    bullets[i].y < alien.y + alienHeight
                 ){
                     alien.status = 0            //alien dies
+                    bullets[i].status = 0       //bullet dies
                 }
             }
         }
-    }
+    }}
 }
 
 
@@ -147,8 +149,8 @@ const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawShip();
     drawAlien();
-    //Add to main.js:
     drawBullet(bullets);
+    collisionDetection();
     if (rightPressed && shipX < canvas.width - shipWidth){
         shipX += 7;
         bulletX +=7;
