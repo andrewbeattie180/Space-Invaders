@@ -95,6 +95,26 @@ const drawAlien = () => {
         }
     }
 }
+
+const collisionDetection = () => {
+    for (let c= 0;c<alienColumnCount;c++){
+        for (let r = 0;r<alienRowCount;r++){
+            var alien = aliens[c][r];
+            if (alien.status == 1){             //If alien is alive
+                if(
+                    x > alien.x &&              //bullet dimensions are
+                    x < alien.x + alienWidth && //within the dimensions of
+                    y > alien.y &&              //the alien 
+                    y < alien.y + alienHeight
+                ){
+                    alien.status = 0            //alien dies
+                }
+            }
+        }
+    }
+}
+
+
 const draw = () => {  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawShip();
