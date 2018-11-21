@@ -7,7 +7,8 @@ const ctx = canvas.getContext("2d");
 let x = canvas.width/2 ; //The middle of the canvas
 let y = canvas.height - 40; // The height of the ship from the bottom
 let dx = 2; //number of pixels horizontally to move on redraw
-let dy = 2; //speed of bullet
+let bulletSpeed = -2; //speed of bullet (vertical movement)
+let dy= -2;
 
 let shipWidth = 80;
 let shipHeight = 80;
@@ -44,43 +45,70 @@ var spacePressed = false;
 
 document.addEventListener("keydown", keyDownHandler, false)
 document.addEventListener("keyup", keyUpHandler, false)
+//Add to main js:
+document.addEventListener('keydown',fire,false)
 
 function keyDownHandler(e){
 if (e.keyCode == 39) {
    rightPressed = true;
 } else if (e.keyCode == 37) {
    leftPressed = true;
-} else if (e.keyCode == 32) {
-   spacePressed = true;
-}}
+} }
 
 function keyUpHandler(e){
 if (e.keyCode == 39) {
    rightPressed = false;
 } else if (e.keyCode == 37) {
    leftPressed = false;
-} else if (e.keyCode == 32) {
-   spacePressed = false;
-}}
+} 
+//Keydown and keyup handler for space removed.
 
+}
+
+function fire(e){
+    if(e.keyCode == 32){
+    let bullet = {x: bulletX, y: bulletY, status:1};
+    bullets.push(bullet);
+    drawBullet(bullets)
+    }
+}
 
 //Variables to describe the bullets from the spaceship
 let bulletWidth = 3;
 let bulletHeight = 10;
 let bulletX =(shipX + (shipWidth-bulletWidth)/2);
+let bulletY=shipTop;
+let bullets = [];
+
 
 const drawShip = () => {
     ctx.drawImage(imgShip,shipX,canvas.height-(shipHeight+20),shipWidth,shipHeight)
 
 };
 
-const drawBullet = () => {
-    ctx.beginPath();
-    ctx.rect(bulletX,shipTop,bulletWidth,bulletHeight);
-    ctx.fillStyle = 'lime';
-    ctx.fill();
-    ctx.closePath();
+const drawBullet = (bullets) => {
+   //For loop added:
+   
+    for (let i =0;i<bullets.length;i++){
+        if(bullets[i].status == 1){
+           if (bullets[i].y > bulletHeight){
+                ctx.beginPath();
+                ctx.rect(bullets[i].x,bullets[i].y,bulletWidth,bulletHeight);
+                ctx.fillStyle = 'lime';
+                ctx.fill();
+                ctx.closePath();
+                spacePressed = !spacePressed;
+                bullets[i].y += bulletSpeed;
+                }
+            else {
+                bullets[i].status = 0
+                bullets.splice(i, 1);
+
+            }
+        }
+    }
 }
+
 
 const drawAlien = () => {
     for (let c = 0; c < alienColumnCount; c++){
@@ -96,6 +124,7 @@ const drawAlien = () => {
     }
 }
 
+
 const alienMove = () => { // ALIEN MOVE FUNCTION
     alienOffSetLeft+=dx; // EVERY INTERVAL MOVE 2PX HORIZONTALLY
     if (alienOffSetLeft > canvas.width - alienWidth * alienColumnCount - 40 || alienOffSetLeft < 5){ // IF ALIENS MOVE WITHIN 40PX OF RIGHT HAND SIDE OR LESS THAN THE ALIEN OF SET LEFT
@@ -103,10 +132,34 @@ const alienMove = () => { // ALIEN MOVE FUNCTION
         alienOffSetTop +=dy // EACH TIME HITS LEFT/RIGHT MOVE DOWN 2PX
 }};
 
+const collisionDetection = () => {
+    for (let c= 0;c<alienColumnCount;c++){
+        for (let r = 0;r<alienRowCount;r++){
+            var alien = aliens[c][r];
+            if (alien.status == 1){             //If alien is alive
+                for (let i = 0;i<bullets.length;i++){
+                    if(
+                    bullets[i].x > alien.x &&              //bullet dimensions are
+                    bullets[i].x < alien.x + alienWidth && //within the dimensions of
+                    bullets[i].y > alien.y &&              //the alien 
+                    bullets[i].y < alien.y + alienHeight
+                ){
+                    alien.status = 0            //alien dies
+                    bullets[i].status = 0       //bullet dies
+                }
+            }
+        }
+    }}
+}
+
+
+
 const draw = () => {  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawShip();
     drawAlien();
+    drawBullet(bullets);
+    collisionDetection();
     if (rightPressed && shipX < canvas.width - shipWidth){
         shipX += 7;
         bulletX +=7;
@@ -114,9 +167,8 @@ const draw = () => {
         shipX -= 7;
         bulletX -=7;
     }
-    if (spacePressed){
-        drawBullet();
-    }
+    
+    
 
     x+=dx;
     alienMove();        //  ELLIOT: FUNCTION CALLED FOR MOVING ALIENS
