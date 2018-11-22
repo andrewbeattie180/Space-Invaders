@@ -124,7 +124,7 @@ const drawAlien = () => {
                 aliens[c][r].y = alienY;
                 if(r===0){
                     ctx.drawImage(imgAlien1,alienX,alienY,alienWidth,alienHeight)}
-                else if (r>0&&r<4){
+                else if (r>0&&r<3){
                 ctx.drawImage(imgAlien2,alienX,alienY,alienWidth,alienHeight)
                 } else {
                 ctx.drawImage(imgAlien3,alienX,alienY,alienWidth,alienHeight)
@@ -155,7 +155,6 @@ const collisionDetection = () => {
                     bullets[i].y < alien.y + alienHeight
                 ){
                     alien.status = 0            //alien dies
-
                     bullets[i].status = 0       //bullet dies
                     bullets.splice(i,1)         //
                 }
