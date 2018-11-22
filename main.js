@@ -27,9 +27,9 @@ let alienColumnCount = 11;
 let alienRowCount = 5;
 let alienWidth = 60;
 let alienHeight = 60;
-let alienPadding = (3);
+let alienPadding = 3;
 let alienOffSetTop = 70;
-let alienOffSetLeft = (5);
+let alienOffSetLeft = 5;
 let deletedRows = 0;
 let deletedRightColumns = 0;
 let deletedLeftColumns = 0;
@@ -53,12 +53,10 @@ for (let c = 0; c < alienColumnCount; c++){
 
 var rightPressed = false;
 var leftPressed = false;
-var spacePressed = false;
 
 document.addEventListener("keydown", keyDownHandler, false)
 document.addEventListener("keyup", keyUpHandler, false)
-//Add to main js:
-document.addEventListener('keydown',fire,false)
+document.addEventListener('keydown', fire, false)
 
 function keyDownHandler(e){
 if (e.keyCode == 39) {
