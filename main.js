@@ -6,11 +6,12 @@ const ctx = canvas.getContext("2d");
 //Variables to describe the spaceship container
 let x = canvas.width/2 ; //The middle of the canvas
 let y = canvas.height - 40; // The height of the ship from the bottom
-let dx = 0.3; //number of pixels horizontally to move on redraw
+let dx = 0.2; //number of pixels horizontally to move on redraw
 let dy= -20;
+
 let bulletSpeed = -2; //speed of bullet (vertical movement)
-// JAKE: ADDED ALIEN BULLET SPEED
 let alienBulletSpeed = 2;
+
 
 let shipWidth = 80;
 let shipHeight = 80;
@@ -37,6 +38,7 @@ imgAlien2.src = './img/alien-bug.svg'
 imgAlien3.src = './img/scout-ship.svg'
 
 let aliens = [];
+
 
 for (let c = 0; c < alienColumnCount; c++){
     aliens[c]=[];
@@ -111,8 +113,9 @@ const drawShip = () => {
 };
 
 
+
 const drawBullet = () => {
-    for (let i =0;i<bullets.length;i++){
+    for (let i =0; i < bullets.length; i++){
         if(bullets[i].status == 1){
            if (bullets[i].y > bulletHeight){
                 ctx.beginPath();
@@ -185,15 +188,15 @@ const selectAlien = () => {
 
 
 const drawAlien = () => {
-    for (let c = 0; c < alienColumnCount; c++){
-        for (let r = 0; r < alienRowCount; r++){
+    for (let c = 0; c < aliens.length; c++){
+        for (let r = 0; r < aliens[c].length; r++){
             if (aliens[c][r].status == 1){
                 let alienX = c * (alienWidth + alienPadding) + alienOffSetLeft;
                 let alienY = r * (alienHeight + alienPadding) + alienOffSetTop;
                 aliens[c][r].x = alienX;
                 aliens[c][r].y = alienY;
                 if(r===0){
-                    ctx.drawImage(imgAlien1,alienX,alienY,alienWidth,alienHeight)}
+                ctx.drawImage(imgAlien1,alienX,alienY,alienWidth,alienHeight)}
                 else if (r>0&&r<3){
                 ctx.drawImage(imgAlien2,alienX,alienY,alienWidth,alienHeight)
                 } else {
@@ -205,21 +208,38 @@ const drawAlien = () => {
 }
 
 
-const alienMove = () => { // ALIEN MOVE FUNCTION
-    alienOffSetLeft+=dx; // EVERY INTERVAL MOVE 2PX HORIZONTALLY
-    if (alienOffSetLeft > canvas.width - alienWidth * alienColumnCount - 40 || alienOffSetLeft < 5){ // IF ALIENS MOVE WITHIN 40PX OF RIGHT HAND SIDE OR LESS THAN THE ALIEN OF SET LEFT
-        dx = -dx; // MOVE 2PX
-        alienOffSetTop -=dy // EACH TIME HITS LEFT/RIGHT MOVE DOWN 2PX
-}};
+const moveAliens = () => {
+    alienOffSetLeft+=dx;
+    let currentAlienColumns = aliens.length;
+    let alienRows = []
+
+    for (let c = 0;c<currentAlienColumns-1;c++){
+        alienRows.push(aliens[c].length)
+    }
+    let currentAlienRows = Math.max(...alienRows);
+
+    if (alienOffSetLeft > canvas.width - alienWidth * (currentAlienColumns) - 40 || alienOffSetLeft < 5){
+        dx = -dx*1.01;
+        alienOffSetTop -=dy}
+    if (canvas.height - (currentAlienRows* (alienHeight + alienPadding) + alienOffSetTop) > shipHeight*2){
+        dy = dy;
+    } else {
+        dy = 0;
+        dx = 0;
+        //lives -=;
+    }
+    
+};
 
 
 const collisionDetection = () => {
-    for (let c= 0; c < alienColumnCount; c++) {
-        for (let r = 0; r < alienRowCount; r++) {
+
+    for (let c= 0;c<aliens.length;c++){
+        for (let r = 0;r<aliens[c].length;r++){
             var alien = aliens[c][r];
-            if (alien.status == 1){             //If alien is alive
-                for (let i = 0; i < bullets.length; i++) {
-                    if ( 
+            if (alien.status === 1){             //If alien is alive
+                for (let i = 0;i<bullets.length;i++){
+                    if(
                     bullets[i].x > alien.x &&              //bullet dimensions are
                     bullets[i].x < alien.x + alienWidth && //within the dimensions of
                     bullets[i].y > alien.y &&              //the alien 
@@ -235,17 +255,60 @@ const collisionDetection = () => {
         }
     }}
 }
-
-
+const lastRowHandler = () => {
+    for (let c = 0;c<aliens.length;c++){
+        for (let r = 0; r<aliens[c].length;r++){
+            let lastAlien = aliens[c][aliens[c].length-1];
+            if (lastAlien.status===0){
+                aliens[c].splice(aliens[c].length-1,1);
+            }
+        }
+    }
+}
+const lastColumnHandler = () => {
+    let lastDeadColumn = [];
+    let maxColumn = aliens[aliens.length-1];
+    for (let r = 0; r<maxColumn.length;r++){
+       lastDeadColumn.push(maxColumn[r].status)
+    } 
+    let deadSum = lastDeadColumn.reduce((a,b)=> a+b,0)
+    if (deadSum === 0){
+        aliens.splice(aliens.length-1,1);
+        }
+    }
+const firstColumnHandler = () =>{
+    let firstDeadColumn = [];
+    let firstColumn = aliens[0];
+    for (let r = 0; r<firstColumn.length;r++){
+        firstDeadColumn.push(firstColumn[r].status)
+    }
+    let firstSum = firstDeadColumn.reduce((a,b)=>a+b,0)
+    if (firstSum === 0){
+        aliens.splice(0,1);
+        for (let c = 0; c<aliens.length;c++){
+            for (let r = 0; r<aliens[c].length;r++){
+                console.log('before:' + aliens[c][r].x);
+                aliens[c][r]['x'] += 2*(alienWidth + alienPadding + alienOffSetLeft);
+                drawAlien();
+                console.log('after'+aliens[c][r].x)
+            }
+        } 
+        return aliens;  
+    }
+}
 
 const draw = () => {  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    firstColumnHandler();
+    lastColumnHandler();
+    lastRowHandler();
     drawShip();
     drawAlien();
     drawBullet(bullets);
-    //JAKE: ALIEN BULLET FUNCTION
     drawBullet(alienBullets);
+    moveAliens();        
     collisionDetection();
+
     if (rightPressed && shipX < canvas.width - shipWidth){
         shipX += 7;
         bulletX +=7;
@@ -256,7 +319,6 @@ const draw = () => {
     
 
     x+=dx;
-    alienMove();        //  ELLIOT: FUNCTION CALLED FOR MOVING ALIENS
 };
 
 setInterval(draw,10);
