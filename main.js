@@ -6,9 +6,9 @@ const ctx = canvas.getContext("2d");
 //Variables to describe the spaceship container
 let x = canvas.width/2 ; //The middle of the canvas
 let y = canvas.height - 40; // The height of the ship from the bottom
-let dx = 2; //number of pixels horizontally to move on redraw
+let dx = 0.3; //number of pixels horizontally to move on redraw
+let dy= -20;
 let bulletSpeed = -2; //speed of bullet (vertical movement)
-let dy= -2;
 
 let shipWidth = 80;
 let shipHeight = 80;
@@ -27,8 +27,12 @@ let alienHeight = 60;
 let alienPadding = (3);
 let alienOffSetTop = 70;
 let alienOffSetLeft = (5);
-let imgAlien = new Image();
-imgAlien.src = './img/cooking-pot.svg'
+let imgAlien1 = new Image();
+let imgAlien2 = new Image();
+let imgAlien3 = new Image();
+imgAlien1.src = './img/cooking-pot.svg'
+imgAlien2.src = './img/alien-bug.svg'
+imgAlien3.src = './img/scout-ship.svg'
 
 let aliens = [];
 for (let c = 0;c<alienColumnCount;c++){
@@ -118,7 +122,13 @@ const drawAlien = () => {
                 let alienY = r * (alienHeight + alienPadding) + alienOffSetTop;
                 aliens[c][r].x = alienX;
                 aliens[c][r].y = alienY;
-                ctx.drawImage(imgAlien,alienX,alienY,alienWidth,alienHeight);
+                if(r===0){
+                    ctx.drawImage(imgAlien1,alienX,alienY,alienWidth,alienHeight)}
+                else if (r>0&&r<4){
+                ctx.drawImage(imgAlien2,alienX,alienY,alienWidth,alienHeight)
+                } else {
+                ctx.drawImage(imgAlien3,alienX,alienY,alienWidth,alienHeight)
+                }
             }
         }
     }
@@ -129,7 +139,7 @@ const alienMove = () => { // ALIEN MOVE FUNCTION
     alienOffSetLeft+=dx; // EVERY INTERVAL MOVE 2PX HORIZONTALLY
     if (alienOffSetLeft > canvas.width - alienWidth * alienColumnCount - 40 || alienOffSetLeft < 5){ // IF ALIENS MOVE WITHIN 40PX OF RIGHT HAND SIDE OR LESS THAN THE ALIEN OF SET LEFT
         dx = -dx; // MOVE 2PX
-        alienOffSetTop +=dy // EACH TIME HITS LEFT/RIGHT MOVE DOWN 2PX
+        alienOffSetTop -=dy // EACH TIME HITS LEFT/RIGHT MOVE DOWN 2PX
 }};
 
 const collisionDetection = () => {
@@ -145,7 +155,9 @@ const collisionDetection = () => {
                     bullets[i].y < alien.y + alienHeight
                 ){
                     alien.status = 0            //alien dies
+
                     bullets[i].status = 0       //bullet dies
+                    bullets.splice(i,1)         //
                 }
             }
         }
