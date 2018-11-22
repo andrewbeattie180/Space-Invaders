@@ -37,13 +37,13 @@ imgAlien2.src = './img/alien-bug.svg'
 imgAlien3.src = './img/scout-ship.svg'
 
 let aliens = [];
-for (let c = 0;c<alienColumnCount;c++){
+
+for (let c = 0; c < alienColumnCount; c++){
     aliens[c]=[];
-    for (let r = 0;r<alienRowCount;r++){
-        aliens[c][r] = {x:0,y:0,status:1};
+    for (let r = 0; r < alienRowCount; r++){
+        aliens[c][r] = {x: 0, y: 0, status: 1};
     }
 }
-
 
 var rightPressed = false;
 var leftPressed = false;
@@ -69,13 +69,22 @@ if (e.keyCode == 39) {
     } 
 }
 
+function fireSound(e) {                 // FUNCTION FOR FIRING SOUND
+var pew = new Audio('pew.wav');         // FIRING SOUND SAVED TO VARIABLE
+if (e.keyCode == 32) {                  // IF SPACE PRESSED
+    pew.play();                         // PLAY FIRING SOUND
+}
+}
+
 function fire(e){
     if(e.keyCode == 32){
     let bullet = {x: bulletX, y: bulletY, status:1};
     bullets.push(bullet);
     drawBullet(bullets)
+    fireSound(e);
     }
 }
+
 
 function alienFire(alienBulletX,alienBulletY){
 
@@ -84,21 +93,23 @@ function alienFire(alienBulletX,alienBulletY){
         drawBullet(alienBullets)   
 }
 
+
 //Variables to describe the bullets from the spaceship
 let bulletWidth = 3;
 let bulletHeight = 10;
-let bulletX =(shipX + (shipWidth-bulletWidth)/2);
-let bulletY=shipTop;
+let bulletX = (shipX + (shipWidth-bulletWidth)/2);
+let bulletY = shipTop;
 let bullets = [];
+
 
 // VARIABLES FOR THE ALIEN BULLETS
 let alienBullets = [];
 
-
 const drawShip = () => {
-    ctx.drawImage(imgShip,shipX,canvas.height-(shipHeight+20),shipWidth,shipHeight)
+    ctx.drawImage(imgShip, shipX, canvas.height-(shipHeight+20), shipWidth, shipHeight)
 
 };
+
 
 const drawBullet = () => {
     for (let i =0;i<bullets.length;i++){
@@ -171,8 +182,6 @@ const selectAlien = () => {
 
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 
 const drawAlien = () => {
@@ -203,19 +212,22 @@ const alienMove = () => { // ALIEN MOVE FUNCTION
         alienOffSetTop -=dy // EACH TIME HITS LEFT/RIGHT MOVE DOWN 2PX
 }};
 
+
 const collisionDetection = () => {
-    for (let c= 0;c<alienColumnCount;c++){
-        for (let r = 0;r<alienRowCount;r++){
+    for (let c= 0; c < alienColumnCount; c++) {
+        for (let r = 0; r < alienRowCount; r++) {
             var alien = aliens[c][r];
             if (alien.status == 1){             //If alien is alive
-                for (let i = 0;i<bullets.length;i++){
-                    if(
+                for (let i = 0; i < bullets.length; i++) {
+                    if ( 
                     bullets[i].x > alien.x &&              //bullet dimensions are
                     bullets[i].x < alien.x + alienWidth && //within the dimensions of
                     bullets[i].y > alien.y &&              //the alien 
                     bullets[i].y < alien.y + alienHeight
-                ){
+                ) {
                     alien.status = 0            //alien dies
+                    var die = new Audio('die.wav'); // variable for alien dieing sound
+                    die.play();                 // ALIEN MAKES DIEING SOUND WHEN DIEING
                     bullets[i].status = 0       //bullet dies
                     bullets.splice(i,1)         //
                 }
@@ -241,7 +253,6 @@ const draw = () => {
         shipX -= 7;
         bulletX -=7;
     }
-    
     
 
     x+=dx;
