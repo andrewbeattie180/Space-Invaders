@@ -9,6 +9,8 @@ let y = canvas.height - 40; // The height of the ship from the bottom
 let dx = 0.3; //number of pixels horizontally to move on redraw
 let dy= -20;
 let bulletSpeed = -2; //speed of bullet (vertical movement)
+// JAKE: ADDED ALIEN BULLET SPEED
+let alienBulletSpeed = 2;
 
 let shipWidth = 80;
 let shipHeight = 80;
@@ -64,9 +66,7 @@ if (e.keyCode == 39) {
    rightPressed = false;
 } else if (e.keyCode == 37) {
    leftPressed = false;
-} 
-//Keydown and keyup handler for space removed.
-
+    } 
 }
 
 function fire(e){
@@ -77,6 +77,13 @@ function fire(e){
     }
 }
 
+function alienFire(alienBulletX,alienBulletY){
+
+        let alienBullet = {x: alienBulletX, y: alienBulletY, status:1};
+        alienBullets.push(alienBullet);
+        drawBullet(alienBullets)   
+}
+
 //Variables to describe the bullets from the spaceship
 let bulletWidth = 3;
 let bulletHeight = 10;
@@ -84,15 +91,16 @@ let bulletX =(shipX + (shipWidth-bulletWidth)/2);
 let bulletY=shipTop;
 let bullets = [];
 
+// VARIABLES FOR THE ALIEN BULLETS
+let alienBullets = [];
+
 
 const drawShip = () => {
     ctx.drawImage(imgShip,shipX,canvas.height-(shipHeight+20),shipWidth,shipHeight)
 
 };
 
-const drawBullet = (bullets) => {
-   //For loop added:
-   
+const drawBullet = () => {
     for (let i =0;i<bullets.length;i++){
         if(bullets[i].status == 1){
            if (bullets[i].y > bulletHeight){
@@ -101,8 +109,8 @@ const drawBullet = (bullets) => {
                 ctx.fillStyle = 'lime';
                 ctx.fill();
                 ctx.closePath();
-                spacePressed = !spacePressed;
                 bullets[i].y += bulletSpeed;
+
                 }
             else {
                 bullets[i].status = 0
@@ -111,7 +119,60 @@ const drawBullet = (bullets) => {
             }
         }
     }
+    // JAKE: ALIENS BULLETS ADDED:
+    for (let i =0;i<alienBullets.length;i++){
+        if(alienBullets[i].status == 1){
+           if (alienBullets[i].y > bulletHeight){
+                ctx.beginPath();
+                ctx.rect(alienBullets[i].x,alienBullets[i].y,bulletWidth,bulletHeight);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                ctx.closePath();
+                alienBullets[i].y += alienBulletSpeed;
+
+                }
+            else {
+                alienBullets[i].status = 0
+                alienBullets.splice(i, 1);
+
+            }
+        }
+    }
 }
+
+
+// JAKE: SELECTING A RANDOM ALIEN:
+let min = 0;
+let max = aliens.length-1;
+
+const randomIndex = (min,max) => {
+    random = Math.floor(Math.random() * (max-min));
+    let randomIndex = min + random;
+    return randomIndex;
+}
+const selectAlien = () => {
+    currentColumn = aliens.length;
+    let alienRows = []
+
+   for (let c = 0;c<currentColumn;c++){
+       alienRows.push(aliens[c].length)
+   }
+   let currentRow = Math.max(...alienRows);
+    let a = randomIndex(0, currentColumn);
+    let b = randomIndex(0, currentRow);
+    
+    if (aliens[a][b].status === 1){
+        let alienBulletX =(aliens[a][b].x  + (alienWidth - bulletWidth)/2);
+        let alienBulletY= (aliens[a][b].y + alienHeight);
+        alienFire(alienBulletX,alienBulletY);
+        // console.log('C:' + a + 'R:' + b);
+        console.log(aliens)
+    }else selectAlien();
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
 
 
 const drawAlien = () => {
@@ -170,6 +231,8 @@ const draw = () => {
     drawShip();
     drawAlien();
     drawBullet(bullets);
+    //JAKE: ALIEN BULLET FUNCTION
+    drawBullet(alienBullets);
     collisionDetection();
     if (rightPressed && shipX < canvas.width - shipWidth){
         shipX += 7;
@@ -186,3 +249,5 @@ const draw = () => {
 };
 
 setInterval(draw,10);
+//JAKE: SELECT RANDOM ACTIVATED:
+setInterval(selectAlien,2000);
