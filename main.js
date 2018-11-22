@@ -30,6 +30,10 @@ let alienHeight = 60;
 let alienPadding = (3);
 let alienOffSetTop = 70;
 let alienOffSetLeft = (5);
+let deletedRows = 0;
+let deletedRightColumns = 0;
+let deletedLeftColumns = 0;
+
 let imgAlien1 = new Image();
 let imgAlien2 = new Image();
 let imgAlien3 = new Image();
@@ -133,17 +137,15 @@ const drawBullet = () => {
             }
         }
     }
-    // JAKE: ALIENS BULLETS ADDED:
     for (let i =0;i<alienBullets.length;i++){
         if(alienBullets[i].status == 1){
-           if (alienBullets[i].y > bulletHeight){
+           if (alienBullets[i].y < canvas.height){
                 ctx.beginPath();
                 ctx.rect(alienBullets[i].x,alienBullets[i].y,bulletWidth,bulletHeight);
                 ctx.fillStyle = 'red';
                 ctx.fill();
                 ctx.closePath();
                 alienBullets[i].y += alienBulletSpeed;
-
                 }
             else {
                 alienBullets[i].status = 0
@@ -153,36 +155,26 @@ const drawBullet = () => {
         }
     }
 }
-
-
-// JAKE: SELECTING A RANDOM ALIEN:
-let min = 0;
-let max = aliens.length-1;
-
 const randomIndex = (min,max) => {
     random = Math.floor(Math.random() * (max-min));
     let randomIndex = min + random;
     return randomIndex;
 }
 const selectAlien = () => {
-    currentColumn = aliens.length;
+    currentColumn = aliens.length-1;
     let alienRows = []
 
    for (let c = 0;c<currentColumn;c++){
-       alienRows.push(aliens[c].length)
+       alienRows.push(aliens[c].length-1)
    }
    let currentRow = Math.max(...alienRows);
     let a = randomIndex(0, currentColumn);
     let b = randomIndex(0, currentRow);
-    
     if (aliens[a][b].status === 1){
         let alienBulletX =(aliens[a][b].x  + (alienWidth - bulletWidth)/2);
         let alienBulletY= (aliens[a][b].y + alienHeight);
         alienFire(alienBulletX,alienBulletY);
-        // console.log('C:' + a + 'R:' + b);
-        console.log(aliens)
     }else selectAlien();
-
 }
 
 
@@ -218,10 +210,10 @@ const moveAliens = () => {
     }
     let currentAlienRows = Math.max(...alienRows);
 
-    if (alienOffSetLeft > canvas.width - alienWidth * (currentAlienColumns) - 40 || alienOffSetLeft < 5){
+    if (alienOffSetLeft > canvas.width - alienWidth * (currentAlienColumns-deletedRightColumns) - 40 || alienOffSetLeft+(deletedLeftColumns*alienWidth) < 5){
         dx = -dx*1.01;
         alienOffSetTop -=dy}
-    if (canvas.height - (currentAlienRows* (alienHeight + alienPadding) + alienOffSetTop) > shipHeight*2){
+    if (canvas.height - ((currentAlienRows-deletedRows)* (alienHeight + alienPadding) + alienOffSetTop) > shipHeight*2){
         dy = dy;
     } else {
         dy = 0;
@@ -233,7 +225,6 @@ const moveAliens = () => {
 
 
 const collisionDetection = () => {
-
     for (let c= 0;c<aliens.length;c++){
         for (let r = 0;r<aliens[c].length;r++){
             var alien = aliens[c][r];
@@ -256,44 +247,37 @@ const collisionDetection = () => {
     }}
 }
 const lastRowHandler = () => {
+    let lastRow = [];
     for (let c = 0;c<aliens.length;c++){
-        for (let r = 0; r<aliens[c].length;r++){
-            let lastAlien = aliens[c][aliens[c].length-1];
-            if (lastAlien.status===0){
-                aliens[c].splice(aliens[c].length-1,1);
-            }
+            lastRow.push(aliens[c][aliens[c].length-1-deletedRows].status)
+        }
+        let lastRowStatus = lastRow.reduce((a,b)=> a+b,0);
+        if (lastRowStatus === 0){
+            deletedRows +=1
+            console.log("Deleted Rows:" + deletedRows)
         }
     }
-}
+
 const lastColumnHandler = () => {
-    let lastDeadColumn = [];
-    let maxColumn = aliens[aliens.length-1];
-    for (let r = 0; r<maxColumn.length;r++){
-       lastDeadColumn.push(maxColumn[r].status)
+    let lastColumn = [];
+    for (let c = 0; c<aliens[aliens.length-1-deletedRightColumns].length;c++){
+       lastColumn.push(aliens[aliens.length-1-deletedRightColumns][c].status)
     } 
-    let deadSum = lastDeadColumn.reduce((a,b)=> a+b,0)
-    if (deadSum === 0){
-        aliens.splice(aliens.length-1,1);
+    let lastColumnStatus = lastColumn.reduce((a,b)=> a+b,0)
+    if (lastColumnStatus === 0){
+        deletedRightColumns += 1
+        console.log("Deleted Right Columns:" + deletedRightColumns);
         }
     }
 const firstColumnHandler = () =>{
-    let firstDeadColumn = [];
-    let firstColumn = aliens[0];
-    for (let r = 0; r<firstColumn.length;r++){
-        firstDeadColumn.push(firstColumn[r].status)
+    let firstColumn =[];
+    for (let r = 0; r<aliens[0+deletedLeftColumns].length;r++){
+        firstColumn.push(aliens[0+deletedLeftColumns][r].status)
     }
-    let firstSum = firstDeadColumn.reduce((a,b)=>a+b,0)
-    if (firstSum === 0){
-        aliens.splice(0,1);
-        for (let c = 0; c<aliens.length;c++){
-            for (let r = 0; r<aliens[c].length;r++){
-                console.log('before:' + aliens[c][r].x);
-                aliens[c][r]['x'] += 2*(alienWidth + alienPadding + alienOffSetLeft);
-                drawAlien();
-                console.log('after'+aliens[c][r].x)
-            }
-        } 
-        return aliens;  
+    let firstColumnStatus = firstColumn.reduce((a,b)=>a+b,0)
+    if (firstColumnStatus === 0){
+        deletedLeftColumns += 1
+        console.log("Deleted Left Columns:" + deletedLeftColumns)  
     }
 }
 
@@ -322,5 +306,4 @@ const draw = () => {
 };
 
 setInterval(draw,10);
-//JAKE: SELECT RANDOM ACTIVATED:
-setInterval(selectAlien,2000);
+setInterval(selectAlien,300);
