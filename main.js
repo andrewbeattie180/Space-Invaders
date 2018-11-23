@@ -50,24 +50,31 @@ for (let c = 0; c < alienColumnCount; c++){
 
 var rightPressed = false;
 var leftPressed = false;
+var enterPressed = false;
 
 document.addEventListener("keydown", keyDownHandler, false)
 document.addEventListener("keyup", keyUpHandler, false)
 document.addEventListener('keydown', fire, false)
+// document.addEventListener('keydown',game,false)
 
 function keyDownHandler(e){
+    e.preventDefault()
+
 if (e.keyCode == 39) {
    rightPressed = true;
 } else if (e.keyCode == 37) {
    leftPressed = true;
-} }
+} else if (e.keyCode == 13){
+   enterPressed = true;
+}
+}
 
 function keyUpHandler(e){
 if (e.keyCode == 39) {
    rightPressed = false;
 } else if (e.keyCode == 37) {
    leftPressed = false;
-    } 
+} 
 }
 
 function fireSound(e) {                 // FUNCTION FOR FIRING SOUND
@@ -255,7 +262,7 @@ const shipCollisionDetection = () => {
             alienBullets[i].x <shipX + shipWidth &&
             alienBullets[i].y >shipTop &&
             alienBullets[i].y < shipTop + shipHeight){
-                console.log(i);
+                // console.log(i);
                 alienBullets[i].status = 0;
                 health -= 5;
                 console.log('You shot me boss')
@@ -323,5 +330,37 @@ const draw = () => {
     x+=dx;
 };
 
-setInterval(draw,10);
-setInterval(selectAlien,400);
+setInterval(draw,10)
+setInterval(selectAlien,250)
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// // Attempting to have a loading screen before the game starts
+// const game = () => {
+//     if (enterPressed == false){
+//         clearInterval(draw);
+//         clearInterval(selectAlien);
+//         setInterval(startGame,10);
+//     } else if (enterPressed == true)
+//     {
+//         clearInterval(startGame);
+//         setInterval(draw,10);
+//         setInterval(selectAlien);
+//     }
+// }
+
+
+// const startGame = () => {
+
+//     ctx.clearRect(0, 0, canvas.width, canvas.height);
+//     ctx.font = '60px Arial';
+//     ctx.fillStyle = 'lime';
+//     ctx.fillText("SPACE BALTI ", canvas.width/2-200,canvas.height/2);
+//     ctx.fillText("Press Enter", canvas.width/2-170,100+canvas.height/2);
+// }
+
+// game();
