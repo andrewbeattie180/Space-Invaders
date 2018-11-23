@@ -1,5 +1,3 @@
-
-//
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -9,10 +7,10 @@ let y = canvas.height - 40; // The height of the ship from the bottom
 let dx = 0.2; //number of pixels horizontally to move on redraw
 let dy= -20;
 
-let bulletSpeed = -2; //speed of bullet (vertical movement)
-let alienBulletSpeed = 2;
+let bulletSpeed = -7; //speed of bullet (vertical movement)
+let alienBulletSpeed = 7;
 
-
+let health = 100;
 let shipWidth = 80;
 let shipHeight = 80;
 let shipX = (canvas.width - shipWidth)/2;
@@ -22,12 +20,11 @@ imgShip.src = "./img/starfighter.svg";
 
 //Variable to describe the aliens
 
-
 let alienColumnCount = 11;
 let alienRowCount = 5;
 let alienWidth = 60;
 let alienHeight = 60;
-let alienPadding = 3;
+let alienPadding = 7;
 let alienOffSetTop = 70;
 let alienOffSetLeft = 5;
 let deletedRows = 0;
@@ -115,7 +112,6 @@ const drawShip = () => {
 };
 
 
-
 const drawBullet = () => {
     for (let i =0; i < bullets.length; i++){
         if(bullets[i].status == 1){
@@ -159,7 +155,7 @@ const randomIndex = (min,max) => {
     return randomIndex;
 }
 const selectAlien = () => {
-    currentColumn = aliens.length-1;
+    currentColumn = aliens.length;
     let alienRows = []
 
    for (let c = 0;c<currentColumn;c++){
@@ -196,6 +192,14 @@ const drawAlien = () => {
         }
     }
 }
+const drawHealth = () => {
+    if(health<0){
+        health = 0
+    }
+    ctx.font = "17px Arial";
+    ctx.fillStyle = 'lime';
+    ctx.fillText("HEALTH: " + health +'%', 8, 20);
+}
 
 
 const moveAliens = () => {
@@ -208,7 +212,7 @@ const moveAliens = () => {
     }
     let currentAlienRows = Math.max(...alienRows);
 
-    if (alienOffSetLeft > canvas.width - alienWidth * (currentAlienColumns-deletedRightColumns) - 40 || alienOffSetLeft+(deletedLeftColumns*alienWidth) < 5){
+    if (alienOffSetLeft > canvas.width - alienWidth * (currentAlienColumns-deletedRightColumns) - 70 || alienOffSetLeft+(deletedLeftColumns*alienWidth) < 5){
         dx = -dx*1.01;
         alienOffSetTop -=dy}
     if (canvas.height - ((currentAlienRows-deletedRows)* (alienHeight + alienPadding) + alienOffSetTop) > shipHeight*2){
@@ -216,7 +220,7 @@ const moveAliens = () => {
     } else {
         dy = 0;
         dx = 0;
-        //lives -=;
+        health -= 100;
     }
     
 };
@@ -243,6 +247,21 @@ const collisionDetection = () => {
             }
         }
     }}
+}
+
+const shipCollisionDetection = () => {
+    for (let i = 0;i<alienBullets.length;i++){
+        if (alienBullets[i].x >shipX &&
+            alienBullets[i].x <shipX + shipWidth &&
+            alienBullets[i].y >shipTop &&
+            alienBullets[i].y < shipTop + shipHeight){
+                console.log(i);
+                alienBullets[i].status = 0;
+                health -= 5;
+                console.log('You shot me boss')
+                alienBullets.splice(i,1);
+            }
+    }
 }
 const lastRowHandler = () => {
     let lastRow = [];
@@ -286,10 +305,11 @@ const draw = () => {
     lastRowHandler();
     drawShip();
     drawAlien();
-    drawBullet(bullets);
-    drawBullet(alienBullets);
+    drawBullet();
+    drawHealth();
     moveAliens();        
     collisionDetection();
+    shipCollisionDetection();
 
     if (rightPressed && shipX < canvas.width - shipWidth){
         shipX += 7;
@@ -304,4 +324,4 @@ const draw = () => {
 };
 
 setInterval(draw,10);
-setInterval(selectAlien,300);
+setInterval(selectAlien,400);
