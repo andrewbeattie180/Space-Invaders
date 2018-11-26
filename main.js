@@ -11,7 +11,7 @@ let bulletSpeed = -7; //speed of bullet (vertical movement)
 let bulletDamage = 5 // damage of alien bullets
 
 let health = 100;
-let life = 3;
+let life = 5;
 let shipWidth = 80;
 let shipHeight = 80;
 let shipX = (canvas.width - shipWidth) / 2;
@@ -42,7 +42,7 @@ imgAlien3.src = './img/scout-ship.svg'
 imgBoss.src ='./img/interceptor-ship.svg'
 
 let aliens = [];
-
+let lives =[];
 
 for (let c = 0; c < alienColumnCount; c++) {
     aliens[c] = [];
@@ -194,9 +194,30 @@ const drawHealth = () => {
 const drawLife = () =>{
     if (health === 0 && life > 0){
         life -=1;
+        lives[life].status=0;
         health = 100;
     }
-    fillText("LIVES: " + life, 84 ,45, 'lime', 17)
+    
+
+    fillText("LIVES: ", 79 ,45, 'lime', 17);
+
+    
+    for (c=0;c<life;c++){
+        lives[c]={
+            x:0,
+            y:0,
+            status:1
+        }
+    }
+    for (c=0;c<life;c++){
+        if (lives[c].status===1){
+        let lifeX = c * (30 + alienPadding) + (50+ ctx.measureText("LIVES: ").width)
+        let lifeY = (30)
+        lives[c].x = lifeX;
+        lives[c].y = lifeY;
+        ctx.drawImage(imgShip,lifeX,lifeY,25,25);
+    }
+}
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
