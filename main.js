@@ -170,7 +170,17 @@ const drawHealth = () => {
     if(health<0){
         health = 0
     }
-    fillText("HEALTH: " + health +'%', 70, 20, 'lime',17);
+    fillText("HEALTH: ", 70, 20, 'lime',17);
+    let hbc;
+    if (health > 50) {
+        hbc = 'lime';
+    } else if (health > 20 && health <= 50) {
+        hbc = 'yellow';
+    } else {
+        hbc = 'red';
+    }
+    ctx.fillStyle = hbc;
+    ctx.fillRect (110,5,(100 - (100 - health))*2,20);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +357,7 @@ const draw = () => {
         clearInterval(moveAliens)
         clearInterval(selectAlien);
     }
+
     x+=dx;
 };
 
@@ -377,6 +388,7 @@ const loadScreen = () => {
 
 
 const playGame = ()=>{
+    
     setInterval(draw,10)
     setInterval(selectAlien,250)
     }
