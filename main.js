@@ -52,10 +52,8 @@ var rightPressed = false;
 var leftPressed = false;
 var enterPressed = false;
 
-document.addEventListener("keydown", keyDownHandler, false)
-document.addEventListener("keyup", keyUpHandler, false)
-document.addEventListener('keydown', fire, false)
-// document.addEventListener('keydown',game,false)
+let gameInProgress = false;
+
 
 function keyDownHandler(e){
     e.preventDefault()
@@ -66,6 +64,7 @@ if (e.keyCode == 39) {
    leftPressed = true;
 } else if (e.keyCode == 13){
    enterPressed = true;
+    console.log('Enter pressed');
 }
 }
 
@@ -88,17 +87,16 @@ function fire(e){
     if(e.keyCode == 32){
     let bullet = {x: bulletX, y: bulletY, status:1};
     bullets.push(bullet);
-    drawBullet(bullets)
+
     fireSound(e);
     }
 }
 
 
 function alienFire(alienBulletX,alienBulletY){
-
         let alienBullet = {x: alienBulletX, y: alienBulletY, status:1};
         alienBullets.push(alienBullet);
-        drawBullet(alienBullets)   
+ 
 }
 
 
@@ -118,44 +116,28 @@ const drawShip = () => {
 
 };
 
-
-const drawBullet = () => {
-    for (let i =0; i < bullets.length; i++){
-        if(bullets[i].status == 1){
-           if (bullets[i].y > bulletHeight){
+const drawBullet = (array,speed,color) => {
+    for (let i =0; i < array.length; i++){
+        if(array[i].status == 1){
+           if (array[i].y > bulletHeight){
                 ctx.beginPath();
-                ctx.rect(bullets[i].x,bullets[i].y,bulletWidth,bulletHeight);
-                ctx.fillStyle = 'lime';
+                ctx.rect(array[i].x,array[i].y,bulletWidth,bulletHeight);
+                ctx.fillStyle = color;
                 ctx.fill();
                 ctx.closePath();
-                bullets[i].y += bulletSpeed;
+                array[i].y += speed;
 
                 }
             else {
-                bullets[i].status = 0
-                bullets.splice(i, 1);
-
-            }
-        }
-    }
-    for (let i =0;i<alienBullets.length;i++){
-        if(alienBullets[i].status == 1){
-           if (alienBullets[i].y < canvas.height){
-                ctx.beginPath();
-                ctx.rect(alienBullets[i].x,alienBullets[i].y,bulletWidth,bulletHeight);
-                ctx.fillStyle = 'red';
-                ctx.fill();
-                ctx.closePath();
-                alienBullets[i].y += alienBulletSpeed;
-                }
-            else {
-                alienBullets[i].status = 0
-                alienBullets.splice(i, 1);
+                array[i].status = 0
+                array.splice(i, 1);
 
             }
         }
     }
 }
+
+
 const randomIndex = (min,max) => {
     random = Math.floor(Math.random() * (max-min));
     let randomIndex = min + random;
@@ -203,9 +185,7 @@ const drawHealth = () => {
     if(health<0){
         health = 0
     }
-    ctx.font = "17px Arial";
-    ctx.fillStyle = 'lime';
-    ctx.fillText("HEALTH: " + health +'%', 8, 20);
+    fillText("HEALTH: " + health +'%', 70, 20, 'lime',17);
 }
 
 
@@ -305,6 +285,13 @@ const firstColumnHandler = () =>{
     }
 }
 
+const gameInit = () =>{
+    life = 3;
+    health = 100;
+    score = 0;
+    shipX = (canvas.width - shipWidth)/2
+
+}
 const draw = () => {  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     firstColumnHandler();
@@ -312,7 +299,8 @@ const draw = () => {
     lastRowHandler();
     drawShip();
     drawAlien();
-    drawBullet();
+    drawBullet(bullets,bulletSpeed,'lime')
+    drawBullet(alienBullets,-bulletSpeed,'red');
     drawHealth();
     moveAliens();        
     collisionDetection();
@@ -330,37 +318,64 @@ const draw = () => {
     x+=dx;
 };
 
-setInterval(draw,10)
-setInterval(selectAlien,250)
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // // Attempting to have a loading screen before the game starts
-// const game = () => {
-//     if (enterPressed == false){
-//         clearInterval(draw);
-//         clearInterval(selectAlien);
-//         setInterval(startGame,10);
-//     } else if (enterPressed == true)
-//     {
-//         clearInterval(startGame);
-//         setInterval(draw,10);
-//         setInterval(selectAlien);
+
+// functions to draw text
+const fillText= (text,x,y,color,fontSize) =>{
+    if (color.typeOf !== 'undefined') ctx.fillStyle = color;
+    if (fontSize.typeOf !== 'undefined') ctx.font = fontSize + 'px Arial';
+    ctx.textAlign='center';
+    ctx.fillText(text,x,y);
+}
+
+// const centeredText = (text, x,y,color,fontSize) =>{
+//     let metrics = ctx.measureText(text);
+//     fillText(text,x-(metrics.width/2), y, color, fontSize);
+// }
+
+// blinkingText = (text,x,y,frequency,color,fontSize) =>{
+//     if (~~(0.5 + Date.now()/frequency)%2){
+//         fillText(text,x,y,color,fontSize)
 //     }
 // }
 
+const loadScreen = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    fillText("SPACE BALTI ", canvas.width/2, canvas.height/2.75, '#00FF00', 75);
+    fillText('Press Enter', canvas.width/2, canvas.height/2,'#00FF00', 60);
+    fillText("Left: ← Right: →  Fire: Space", canvas.width/2, canvas.height/1.75,'#00ff00', 30);
+}
 
-// const startGame = () => {
 
-//     ctx.clearRect(0, 0, canvas.width, canvas.height);
-//     ctx.font = '60px Arial';
-//     ctx.fillStyle = 'lime';
-//     ctx.fillText("SPACE BALTI ", canvas.width/2-200,canvas.height/2);
-//     ctx.fillText("Press Enter", canvas.width/2-170,100+canvas.height/2);
-// }
+const playGame = ()=>{
+    setInterval(draw,10)
+    setInterval(selectAlien,250)
+    }
 
-// game();
+const end = (func)=>{
+    clearInterval(func)
+}
+
+const spaceBalti =()=>{
+    if (enterPressed === false && !gameInProgress){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        loadScreen();
+    } 
+    if (enterPressed === true && !gameInProgress){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // gameInit();
+        gameInProgress = true;
+        end(loadScreen);
+        playGame();
+    }
+}
+
+spaceBalti();
+
+document.addEventListener("keydown", keyDownHandler, false)
+document.addEventListener("keyup", keyUpHandler, false)
+document.addEventListener('keydown', fire, false)
+document.addEventListener('keydown',spaceBalti,false)
