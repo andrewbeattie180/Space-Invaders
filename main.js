@@ -8,7 +8,7 @@ let dx = 0.2; //number of pixels horizontally to move on redraw
 let dy = -20;
 
 let bulletSpeed = -7; //speed of bullet (vertical movement)
-let alienBulletSpeed = 7;
+let bulletDamage = 5 // damage of alien bullets
 
 let health = 100;
 let life = 3;
@@ -21,7 +21,7 @@ imgShip.src = "./img/starfighter.svg";
 
 //Variable to describe the aliens
 
-let alienColumnCount = 2;
+let alienColumnCount = 11;
 let alienRowCount = 5;
 let alienWidth = 60;
 let alienHeight = 60;
@@ -152,28 +152,6 @@ const drawBullet = (array, speed, color) => {
     }
 }
 
-
-const randomIndex = (min, max) => {
-    random = Math.floor(Math.random() * (max - min));
-    let randomIndex = min + random;
-    return randomIndex;
-}
-const selectAlien = () => {
-    currentColumn = aliens.length;
-    let alienRows = []
-
-    for (let c = 0; c < currentColumn; c++) {
-        alienRows.push(aliens[c].length - 1)
-    }
-    let currentRow = Math.max(...alienRows);
-    let a = randomIndex(0, currentColumn);
-    let b = randomIndex(0, currentRow);
-    if (aliens[a][b].status === 1) {
-        let alienBulletX = (aliens[a][b].x + (alienWidth - bulletWidth) / 2);
-        let alienBulletY = (aliens[a][b].y + alienHeight);
-        alienFire(alienBulletX, alienBulletY);
-    } else selectAlien();
-}
 const drawAlien = () => {
     for (let c = 0; c < aliens.length; c++) {
         for (let r = 0; r < aliens[c].length; r++) {
@@ -213,7 +191,13 @@ const drawHealth = () => {
     ctx.fillStyle = hbc;
     ctx.fillRect (110,5,(100 - (100 - health))*2,20);
 }
-
+const drawLife = () =>{
+    if (health === 0 && life > 0){
+        life -=1;
+        health = 100;
+    }
+    fillText("LIVES: " + life, 725,20, 'lime', 17)
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // functions to select a random alien to fire back
@@ -355,44 +339,10 @@ const shipCollisionDetection = () => {
             alienBullets[i].y < shipTop + shipHeight) {
             // console.log(i);
             alienBullets[i].status = 0;
-            health -= 50;
+            health -= bulletDamage;
             console.log('You shot me boss')
             alienBullets.splice(i, 1);
         }
-    }
-}
-const lastRowHandler = () => {
-    let lastRow = [];
-    for (let c = 0; c < aliens.length; c++) {
-        lastRow.push(aliens[c][aliens[c].length - 1 - deletedRows].status)
-    }
-    let lastRowStatus = lastRow.reduce((a, b) => a + b, 0);
-    if (lastRowStatus === 0) {
-        deletedRows += 1
-        console.log("Deleted Rows:" + deletedRows)
-    }
-}
-
-const lastColumnHandler = () => {
-    let lastColumn = [];
-    for (let c = 0; c < aliens[aliens.length - 1 - deletedRightColumns].length; c++) {
-        lastColumn.push(aliens[aliens.length - 1 - deletedRightColumns][c].status)
-    }
-    let lastColumnStatus = lastColumn.reduce((a, b) => a + b, 0)
-    if (lastColumnStatus === 0) {
-        deletedRightColumns += 1
-        console.log("Deleted Right Columns:" + deletedRightColumns);
-    }
-}
-const firstColumnHandler = () => {
-    let firstColumn = [];
-    for (let r = 0; r < aliens[0 + deletedLeftColumns].length; r++) {
-        firstColumn.push(aliens[0 + deletedLeftColumns][r].status)
-    }
-    let firstColumnStatus = firstColumn.reduce((a, b) => a + b, 0)
-    if (firstColumnStatus === 0) {
-        deletedLeftColumns += 1
-        console.log("Deleted Left Columns:" + deletedLeftColumns)
     }
 }
 
@@ -418,9 +368,6 @@ if (enterPressed === true) {
     life = 3
         document.location.reload();
     }
-
-
-
 }
 
 const draw = () => {
