@@ -21,7 +21,7 @@ imgShip.src = "./img/starfighter.svg";
 
 //Variable to describe the aliens
 
-let alienColumnCount = 11;
+let alienColumnCount = 2;
 let alienRowCount = 5;
 let alienWidth = 60;
 let alienHeight = 60;
@@ -35,9 +35,11 @@ let deletedLeftColumns = 0;
 let imgAlien1 = new Image();
 let imgAlien2 = new Image();
 let imgAlien3 = new Image();
+let imgBoss = new Image();
 imgAlien1.src = './img/cooking-pot.svg'
 imgAlien2.src = './img/alien-bug.svg'
 imgAlien3.src = './img/scout-ship.svg'
+imgBoss.src ='./img/interceptor-ship.svg'
 
 let aliens = [];
 
@@ -58,19 +60,22 @@ var leftPressed = false;
 var enterPressed = false;
 
 let gameInProgress = false;
+let aliensDefeated = false;
+let bossDefeated = false;
 
 
 function keyDownHandler(e) {
     e.preventDefault()
 
-    if (e.keyCode == 39) {
-        rightPressed = true;
-    } else if (e.keyCode == 37) {
-        leftPressed = true;
-    } else if (e.keyCode == 13) {
-        enterPressed = true;
-        console.log('Enter pressed');
-    }
+
+if (e.keyCode == 39) {
+   rightPressed = true;
+} else if (e.keyCode == 37) {
+   leftPressed = true;
+} else if (e.keyCode == 13){
+   enterPressed = true;
+}
+
 }
 
 function keyUpHandler(e) {
@@ -81,48 +86,45 @@ function keyUpHandler(e) {
     }
 }
 
-function fireSound(e) { // FUNCTION FOR FIRING SOUND
-    var pew = new Audio('pew.wav'); // FIRING SOUND SAVED TO VARIABLE
-    if (e.keyCode == 32) { // IF SPACE PRESSED
-        pew.play(); // PLAY FIRING SOUND
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// functions to define the firing mechanics of the game
+
+function fireSound(e) {                 
+var pew = new Audio('pew.wav');        
+if (e.keyCode == 32) {                  
+    pew.play();                        
+}
+}
+
+function fire(e){
+    if(e.keyCode == 32){
+    let bullet = {x: bulletX, y: bulletY, status:1};
+    bullets.push(bullet);
+    fireSound(e);
     }
 }
 
-function fire(e) {
-    if (e.keyCode == 32) {
-        let bullet = {
-            x: bulletX,
-            y: bulletY,
-            status: 1
-        };
-        bullets.push(bullet);
-
-        fireSound(e);
-    }
+function alienFire(alienBulletX,alienBulletY){
+        let alienBullet = {x: alienBulletX, y: alienBulletY, status:1};
+        alienBullets.push(alienBullet);
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Variables to describe the bullets
 
-function alienFire(alienBulletX, alienBulletY) {
-    let alienBullet = {
-        x: alienBulletX,
-        y: alienBulletY,
-        status: 1
-    };
-    alienBullets.push(alienBullet);
-
-}
-
-
-//Variables to describe the bullets from the spaceship
 let bulletWidth = 3;
 let bulletHeight = 10;
 let bulletX = (shipX + (shipWidth - bulletWidth) / 2);
 let bulletY = shipTop;
 let bullets = [];
-
-
-// VARIABLES FOR THE ALIEN BULLETS
 let alienBullets = [];
+let bossBullets = [];
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// functions to draw the objects on the canvas
 
 const drawShip = () => {
     ctx.drawImage(imgShip, shipX, canvas.height - (shipHeight + 20), shipWidth, shipHeight)
@@ -140,10 +142,11 @@ const drawBullet = (array, speed, color) => {
                 ctx.closePath();
                 array[i].y += speed;
 
+
             } else {
+
                 array[i].status = 0
                 array.splice(i, 1);
-
             }
         }
     }
@@ -171,9 +174,6 @@ const selectAlien = () => {
         alienFire(alienBulletX, alienBulletY);
     } else selectAlien();
 }
-
-
-
 const drawAlien = () => {
     for (let c = 0; c < aliens.length; c++) {
         for (let r = 0; r < aliens[c].length; r++) {
@@ -193,32 +193,76 @@ const drawAlien = () => {
         }
     }
 }
+
+const drawBoss = ()=>{
+    ctx.drawImage(imgBoss,0, canvas.height, canvas.width, canvas.height)
+}
 const drawHealth = () => {
     if (health < 0) {
         health = 0
     }
-    fillText("HEALTH: " + health + '%', 70, 20, 'lime', 17);
+    fillText("HEALTH: ", 70, 20, 'lime',17);
+    let hbc;
+    if (health > 50) {
+        hbc = 'lime';
+    } else if (health > 20 && health <= 50) {
+        hbc = 'yellow';
+    } else {
+        hbc = 'red';
+    }
+    ctx.fillStyle = hbc;
+    ctx.fillRect (110,5,(100 - (100 - health))*2,20);
 }
 
-const drawLife = () => {
-    if (health === 0) {
-        life -= 1
-        health = 100
-    }
-    ctx.font = "17px Arial";
-    ctx.fillStyle = 'lime';
-    ctx.fillText("LIVES: " + life, 725, 20);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// functions to select a random alien to fire back
+
+const randomIndex = (min,max) => {
+    random = Math.floor(Math.random() * (max-min));
+    let randomIndex = min + random;
+    return randomIndex;
 }
+const selectAlien = () => {
+    currentColumn = aliens.length;
+    let alienRows = []
+   if (!aliensDefeated){ 
+   for (let c = 0;c<currentColumn;c++){
+       alienRows.push(aliens[c].length-1)
+   }
+   
+   let currentRow = Math.max(...alienRows);
+    let a = randomIndex(0, currentColumn);
+    let b = randomIndex(0, currentRow);
+    if (aliens[a][b].status === 1){
+        let alienBulletX =(aliens[a][b].x  + (alienWidth - bulletWidth)/2);
+        let alienBulletY= (aliens[a][b].y + alienHeight);
+        alienFire(alienBulletX,alienBulletY);
+    }else selectAlien();
+}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//functions to move the aliens 
 
 const moveAliens = () => {
-    alienOffSetLeft += dx;
-    let currentAlienColumns = aliens.length;
-    let alienRows = []
+    if (aliensDefeated === false){
+        firstColumnHandler();
+        lastColumnHandler();
+        lastRowHandler();
+        drawBullet(alienBullets,-bulletSpeed,'red');
+        alienOffSetLeft+=dx;
 
-    for (let c = 0; c < currentAlienColumns - 1; c++) {
+
+        let currentAlienColumns = aliens.length;
+        let alienRows = []
+
+        for (let c = 0;c<currentAlienColumns-1;c++){
+
         alienRows.push(aliens[c].length)
-    }
-    let currentAlienRows = Math.max(...alienRows);
+        }
+        let currentAlienRows = Math.max(...alienRows);
 
     if (alienOffSetLeft > canvas.width - alienWidth * (currentAlienColumns - deletedRightColumns) - 70 || alienOffSetLeft + (deletedLeftColumns * alienWidth) < 5) {
         dx = -dx * 1.01;
@@ -232,8 +276,51 @@ const moveAliens = () => {
         // health -= 100;
     }
 
+    }
 };
 
+const lastRowHandler = () => {
+    let lastRow = [];
+    for (let c = 0;c<aliens.length;c++){
+            lastRow.push(aliens[c][aliens[c].length-1-deletedRows].status)
+        }
+        let lastRowStatus = lastRow.reduce((a,b)=> a+b,0);
+        if (lastRowStatus === 0){
+            deletedRows +=1
+            console.log("Deleted Rows:" + deletedRows)
+        }
+    }
+
+const lastColumnHandler = () => {
+    let lastColumn = [];
+    if(aliensDefeated === false){
+    for (let c = 0; c<aliens[aliens.length-1-deletedRightColumns].length;c++){
+       lastColumn.push(aliens[aliens.length-1-deletedRightColumns][c].status)
+    } 
+    let lastColumnStatus = lastColumn.reduce((a,b)=> a+b,0)
+    if (lastColumnStatus === 0){
+        deletedRightColumns += 1
+        console.log("Deleted Right Columns:" + deletedRightColumns);
+        
+    }}
+    }
+const firstColumnHandler = () =>{
+    let firstColumn =[];
+    if(aliensDefeated === false){
+    for (let r = 0; r<aliens[0+deletedLeftColumns].length;r++){
+        firstColumn.push(aliens[0+deletedLeftColumns][r].status)
+    }
+    let firstColumnStatus = firstColumn.reduce((a,b)=>a+b,0)
+    if (firstColumnStatus === 0){
+        deletedLeftColumns += 1
+        console.log("Deleted Left Columns:" + deletedLeftColumns)  
+    }
+}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// functions to detect the bullets collide with targets
 
 const collisionDetection = () => {
     for (let c = 0; c < aliens.length; c++) {
@@ -260,6 +347,7 @@ const collisionDetection = () => {
 }
 
 const shipCollisionDetection = () => {
+
     for (let i = 0; i < alienBullets.length; i++) {
         if (alienBullets[i].x > shipX &&
             alienBullets[i].x < shipX + shipWidth &&
@@ -308,6 +396,9 @@ const firstColumnHandler = () => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 const gameInit = () => {
     life = 3;
     health = 100;
@@ -329,17 +420,14 @@ if (enterPressed === true) {
     }
 
 
+
 }
 
 const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    firstColumnHandler();
-    lastColumnHandler();
-    lastRowHandler();
     drawShip();
     drawAlien();
-    drawBullet(bullets, bulletSpeed, 'lime')
-    drawBullet(alienBullets, -bulletSpeed, 'red');
+    drawBullet(bullets,bulletSpeed,'lime')
     drawHealth();
     moveAliens();
     drawLife();
@@ -353,19 +441,28 @@ const draw = () => {
         shipX -= 7;
         bulletX -= 7;
     }
+
     else {
         if(life <= 0) {
         enterPressed = false;
           gameOver();
         }
     }
-    x += dx;
+
+    
+    if (deletedLeftColumns + deletedRightColumns === alienColumnCount){
+        aliensDefeated = true;
+        clearInterval(moveAliens)
+        clearInterval(selectAlien);
+    }
+
+    x+=dx;
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// // Attempting to have a loading screen before the game starts
 
 // functions to draw text
 const fillText = (text, x, y, color, fontSize) => {
@@ -374,11 +471,6 @@ const fillText = (text, x, y, color, fontSize) => {
     ctx.textAlign = 'center';
     ctx.fillText(text, x, y);
 }
-
-// const centeredText = (text, x,y,color,fontSize) =>{
-//     let metrics = ctx.measureText(text);
-//     fillText(text,x-(metrics.width/2), y, color, fontSize);
-// }
 
 // blinkingText = (text,x,y,frequency,color,fontSize) =>{
 //     if (~~(0.5 + Date.now()/frequency)%2){
@@ -392,7 +484,6 @@ const loadScreen = () => {
     fillText('Press Enter', canvas.width / 2, canvas.height / 2, '#00FF00', 60);
     fillText("Left: ← Right: →  Fire: Space", canvas.width / 2, canvas.height / 1.75, '#00ff00', 30);
 }
-
 
 const playGame = () => {
     setInterval(draw, 10)
@@ -410,9 +501,10 @@ const spaceBalti = () => {
         loadScreen();
     }
     if (enterPressed === true && !gameInProgress) {
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         gameInProgress = true;
-        end(loadScreen);
+        clearInterval(loadScreen);
         playGame();
     }
 
