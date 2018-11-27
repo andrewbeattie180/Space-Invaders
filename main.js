@@ -12,6 +12,7 @@ let bulletDamage = 10 // damage of alien bullets
 
 let health = 100;
 let life = 5;
+let score = 0;
 let shipWidth = 80;
 let shipHeight = 80;
 let shipX = (canvas.width - shipWidth) / 2;
@@ -268,6 +269,8 @@ const drawHealth = () => {
     ctx.fillRect (110,canvas.height - 35,(100 - (100 - health))*2,20);
 }
 
+
+
 const checkLife = () =>{
     if (health === 0 && life > 0){
         life -=1;
@@ -296,6 +299,11 @@ const drawLife = () =>{
     }
 }
 }
+const drawScore = () => {
+    fillText("SCORE: "+ score, 630, 685, "lime", 40)
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // functions to select a random alien to fire back
@@ -411,6 +419,7 @@ const collisionDetection = () => {
                         alien.status = 0 //alien dies
                         // var die = new Audio('die.wav'); // variable for alien dieing sound
                         // die.play(); // ALIEN MAKES DIEING SOUND WHEN DYING
+                        score++;
                         bullets[i].status = 0 //bullet dies
                         bullets.splice(i, 1) //
                     }
@@ -446,6 +455,7 @@ const bossCollisionDetection = ()=>{
                 boss.health -= 5;
                 // console.log('Boss Health: '+boss.health)
                 bullets[i].status = 0;
+                score += 5;
                 bullets.splice(i,1)
             }
         }
@@ -551,6 +561,7 @@ const draw = () => {
     deathCheck();
     winCheck();
     bossLoad();
+    drawScore();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -603,6 +614,7 @@ const drawBossScreen = () =>{
     drawShip();
     drawBoss();
     drawHealth();
+    drawScore();
     drawLife();
     moveShip();
     moveBoss();
@@ -618,6 +630,10 @@ const drawBossScreen = () =>{
     bossCollisionDetection();
     checkLife();
     deathCheck();
+
+    if(boss.health === 0 && boss.lives === 0) {
+        gameOver();  bv 
+    }
 }
 
 const loadBossScreen = ()=>{
@@ -629,13 +645,15 @@ const loadBossScreen = ()=>{
  
 
 const gameOver = () => {
+    let finalScore = score + (health * life);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     end(drawScreenId)
     end(selectAlienId)
     ctx.font = '60px Arial';
     ctx.fillStyle = 'lime';
     ctx.fillText("GAME OVER ", canvas.width / 2, canvas.height / 2);
-    ctx.fillText("Press Enter", canvas.width / 2, 100 + canvas.height / 2);
+    ctx.fillText("FINAL SCORE: "+ finalScore, canvas.width / 2, 70 + canvas.height / 2);
+    ctx.fillText("Press Enter", canvas.width / 2, 150 + canvas.height / 2);
     }
 
 const spaceBalti = () => {
