@@ -49,7 +49,7 @@ let boss = {
     x: 0,
     y: 0,
     health: 300,
-    lives:3
+    lives:2
 }
 
 let pause = false;
@@ -603,7 +603,7 @@ const drawBossScreen = () =>{
     if (bossLoaded){
        
         drawBullet(bullets,bulletSpeed,'lime');
-        drawBullet(bossBullets,-bulletSpeed,'blue');
+        drawBullet(bossBullets,-bulletSpeed,'#FF5900');
         enemyBulletCheck(bossBullets);
         drawBossHealth();
     }
