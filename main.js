@@ -251,8 +251,6 @@ const drawBossHealth = ()=>{
     if (boss.lives === 0 && boss.health === 0){
         bossDefeated = true;
     }
-    
-
     if (boss.lives === 2){
         bossHealthBar = 'lime'
     } else if (boss.lives === 1){
@@ -432,7 +430,7 @@ const collisionDetection = () => {
                         alien.status = 0 //alien dies
                         // var die = new Audio('die.wav'); // variable for alien dieing sound
                         // die.play(); // ALIEN MAKES DIEING SOUND WHEN DYING
-                        score++;
+                        score += 5;
                         bullets[i].status = 0 //bullet dies
                         bullets.splice(i, 1) //
                     }
@@ -652,7 +650,6 @@ const drawBossScreen = () =>{
     moveBoss();
     
     if (bossLoaded){
-       
         drawBullet(bullets,bulletSpeed,'lime');
         drawBullet(bossBullets,-bulletSpeed,bossHealthBar);
         enemyBulletCheck(bossBullets);
@@ -662,10 +659,6 @@ const drawBossScreen = () =>{
     bossCollisionDetection();
     checkLife();
     deathCheck();
-
-    if(boss.health === 0 && boss.lives === 0) {
-        gameOver();  bv 
-    }
 }
 
 const loadBossScreen = ()=>{
@@ -677,7 +670,7 @@ const loadBossScreen = ()=>{
  
 
 const gameOver = () => {
-    let finalScore = score + (health * life);
+    let finalScore = (score * life) * (1+(health/100));
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     end(drawScreenId)
     end(selectAlienId)
