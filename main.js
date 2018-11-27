@@ -16,6 +16,7 @@ let score = 0;
 let shipWidth = 80;
 let shipHeight = 80;
 let shipX = (canvas.width - shipWidth) / 2;
+let shipY = canvas.height - (shipHeight + 70);
 let shipTop = (canvas.height - (shipHeight + 20));
 let imgShip = new Image();
 imgShip.src = "./img/starfighter.svg";
@@ -34,6 +35,8 @@ let deletedRightColumns = 0;
 let deletedLeftColumns = 0;
 let bossX = 0;
 let bossY = 0;
+let bossPadding = canvas.width/6;
+
 
 let imgAlien1 = new Image();
 let imgAlien2 = new Image();
@@ -134,14 +137,14 @@ let alienBullets = [];
 let alienFrequency = 300
 let bossBullets = [];
 let bossFrequency = 300
-
-
+let gameFinished = true
+let bossHealthBar
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // functions to draw the objects on the canvas
 
 const drawShip = () => {
-    ctx.drawImage(imgShip, shipX, canvas.height - (shipHeight + 70), shipWidth, shipHeight)
+    ctx.drawImage(imgShip, shipX, shipY, shipWidth, shipHeight)
 };
 
 const moveShip = () => {
@@ -151,6 +154,14 @@ const moveShip = () => {
     } else if (leftPressed && shipX > 0) {
         shipX -= 7;
         bulletX -= 7;
+    }
+    if (bossDestroyed && shipY + shipHeight > 0){
+        shipY -= 2
+    } else if (bossDestroyed && shipY + shipHeight <= 0){
+        shipY -= 0
+        console.log('Game Finished')
+        gameFinished = true
+        gameOver();
     }
 }
 const resetShip = () => {
@@ -219,14 +230,14 @@ const drawAlien = () => {
 }
 
 const drawBoss = ()=>{
-    boss.x = bossX;
-    boss.y = bossY;
-    ctx.drawImage(imgBoss,bossX, bossY - canvas.height, canvas.width, canvas.height)
+    boss.x = bossX + bossPadding
+    boss.y = bossY - canvas.height*2/3
+    ctx.drawImage(imgBoss,boss.x,boss.y, canvas.width*2/3, canvas.height*2/3)
 }
 
 const speedUpBoss = ()=> {
     bossFrequency = bossFrequency/1.66;
-    console.log(bossFrequency)
+    // console.log(bossFrequency)
     end(bossGunsId);
     bossGunsId = setInterval(bossGunsFire,bossFrequency)
 }
@@ -237,8 +248,10 @@ const drawBossHealth = ()=>{
         boss.lives -=1
         speedUpBoss();
     }
+    if (boss.lives === 0 && boss.health === 0){
+        bossDefeated = true;
+    }
     
-    let bossHealthBar
 
     if (boss.lives === 2){
         bossHealthBar = 'lime'
@@ -327,10 +340,10 @@ const selectAlien = () => {
 
 const bossGunsFire = () => {
     if(bossLoaded){
-        let a = randomIndex(0,15)
+        let a = randomIndex(1,15)
         if(boss.health > 0){
-            let bossBulletX = a*(canvas.width/12)+alienPadding
-            let bossBulletY = (bossY)
+            let bossBulletX = boss.x + a*(canvas.width*2/3/15)
+            let bossBulletY = bossY
             bossFire(bossBulletX,bossBulletY);
         }
     }
@@ -449,8 +462,9 @@ const bossCollisionDetection = ()=>{
         for (let i = 0;i<bullets.length;i++){
             if( 
                 bullets[i].x > boss.x &&
-                bullets[i].x < boss.x+canvas.width &&
-                bullets[i].y < boss.y-60
+                bullets[i].x < boss.x+(canvas.width*2/3)
+                 &&
+                bullets[i].y < boss.y + canvas.height*2/3 - 15
             ) {
                 boss.health -= 5;
                 // console.log('Boss Health: '+boss.health)
@@ -533,15 +547,33 @@ const bossLoad = () =>{
     }
 }
 let bossDY = 0.01*dy
-let bossDX = 0;
+let bossDX = 1;
 let bossLoaded = false;
+let bossDestroyed = false;
 
 const moveBoss = () => {
         bossY -= bossDY
-        bossX += bossDX;
-    if (bossY>300){
+    if (bossY>200){
         bossLoaded = true;
-        bossDY = 0;
+    }
+    if (bossLoaded){
+        bossPadding += bossDX;
+    }
+    if (bossLoaded && (bossPadding>canvas.width-(canvas.width*2/3)||bossPadding<0)){
+        bossDX = -bossDX;
+    }
+    if (!bossDefeated && bossLoaded && (bossY>
+        canvas.height/3||bossY<100)){
+        bossDY = -bossDY
+    }
+    if(bossDefeated){
+        bossDX = 0;
+        if (bossY>0-canvas.width*1/3+bossPadding){
+            bossDY = 0.5
+        } else {
+            bossDY = 0
+            bossDestroyed = true;
+        }
     }
 }
         
@@ -622,7 +654,7 @@ const drawBossScreen = () =>{
     if (bossLoaded){
        
         drawBullet(bullets,bulletSpeed,'lime');
-        drawBullet(bossBullets,-bulletSpeed,'#FF5900');
+        drawBullet(bossBullets,-bulletSpeed,bossHealthBar);
         enemyBulletCheck(bossBullets);
         drawBossHealth();
     }
@@ -649,6 +681,7 @@ const gameOver = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     end(drawScreenId)
     end(selectAlienId)
+    end(bossScreenId)
     ctx.font = '60px Arial';
     ctx.fillStyle = 'lime';
     ctx.fillText("GAME OVER ", canvas.width / 2, canvas.height / 2);
