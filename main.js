@@ -3,7 +3,7 @@ const ctx = canvas.getContext("2d");
 
 //Variables to describe the spaceship container
 let x = canvas.width / 2; //The middle of the canvas
-let y = canvas.height - 40; // The height of the ship from the bottom
+// let y = canvas.height - 40; // The height of the ship from the bottom
 let dx = 0.2; //number of pixels horizontally to move on redraw
 let dy = -20;
 
@@ -130,7 +130,9 @@ let bulletX = (shipX + (shipWidth - bulletWidth) / 2);
 let bulletY = shipTop;
 let bullets = [];
 let alienBullets = [];
+let alienFrequency = 300
 let bossBullets = [];
+let bossFrequency = 300
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +159,7 @@ const resetShip = () => {
         shipX = (canvas.width - shipWidth) / 2;
         bulletX = (shipX + (shipWidth - bulletWidth) / 2);
     drawScreenId = setInterval(draw,10)
-    selectAlienId = setInterval(selectAlien,333)
+    selectAlienId = setInterval(selectAlien,alienFrequency)
     },1500);
     alienBullets = [];
     bullets=[];
@@ -169,7 +171,7 @@ const resetBossFight = () =>{
     setTimeout(function(){
         shipX = (canvas.width - shipWidth) / 2;
         bulletX = (shipX + (shipWidth - bulletWidth) / 2);
-        bossGunsId = setInterval(bossGunsFire,200)
+        bossGunsId = setInterval(bossGunsFire,bossFrequency)
         bossScreenId = setInterval(drawBossScreen,10)
     },1000);
     bossBullets = [];
@@ -189,10 +191,11 @@ const drawBullet = (array, speed, color) => {
             } else {
                 array[i].status = 0
                 array.splice(i, 1);
+                }
             }
         }
     }
-}
+
 
 const drawAlien = () => {
     for (let c = 0; c < aliens.length; c++) {
@@ -220,10 +223,18 @@ const drawBoss = ()=>{
     ctx.drawImage(imgBoss,bossX, bossY - canvas.height, canvas.width, canvas.height)
 }
 
+const speedUpBoss = ()=> {
+    bossFrequency = bossFrequency/1.66;
+    console.log(bossFrequency)
+    end(bossGunsId);
+    bossGunsId = setInterval(bossGunsFire,bossFrequency)
+}
+
 const drawBossHealth = ()=>{
     if (boss.health === 0 && boss.lives >0){
         boss.health = 300;
         boss.lives -=1
+        speedUpBoss();
     }
     
     let bossHealthBar
@@ -310,7 +321,7 @@ const bossGunsFire = () => {
     if(bossLoaded){
         let a = randomIndex(0,15)
         if(boss.health > 0){
-            let bossBulletX = a*(canvas.width/15)+alienPadding
+            let bossBulletX = a*(canvas.width/12)+alienPadding
             let bossBulletY = (bossY)
             bossFire(bossBulletX,bossBulletY);
         }
@@ -327,9 +338,6 @@ const moveAliens = () => {
         lastRowHandler();
         drawBullet(alienBullets,-bulletSpeed,'red');
         alienOffSetLeft+=dx;
-
-        ;
-        let alienRows = []
 
     if (alienOffSetLeft > canvas.width - alienWidth * (alienColumnCount - deletedRightColumns) - 70 || alienOffSetLeft + (deletedLeftColumns * alienWidth) < 5) {
         dx = -dx;
@@ -353,7 +361,7 @@ const lastRowHandler = () => {
         let lastRowStatus = lastRow.reduce((a,b)=> a+b,0);
         if (lastRowStatus === 0){
             deletedRows +=1
-            console.log("Deleted Rows:" + deletedRows)
+            // console.log("Deleted Rows:" + deletedRows)
         }}
     }
 
@@ -366,7 +374,7 @@ const lastColumnHandler = () => {
     let lastColumnStatus = lastColumn.reduce((a,b)=> a+b,0)
     if (lastColumnStatus === 0){
         deletedRightColumns += 1
-        console.log("Deleted Right Columns:" + deletedRightColumns);
+        // console.log("Deleted Right Columns:" + deletedRightColumns);
         
     }}
     }
@@ -379,7 +387,7 @@ const firstColumnHandler = () =>{
     let firstColumnStatus = firstColumn.reduce((a,b)=>a+b,0)
     if (firstColumnStatus === 0){
         deletedLeftColumns += 1
-        console.log("Deleted Left Columns:" + deletedLeftColumns)  
+        // console.log("Deleted Left Columns:" + deletedLeftColumns)  
     }
 }
 }
@@ -436,7 +444,7 @@ const bossCollisionDetection = ()=>{
                 bullets[i].y < boss.y-60
             ) {
                 boss.health -= 5;
-                console.log('Boss Health: '+boss.health)
+                // console.log('Boss Health: '+boss.health)
                 bullets[i].status = 0;
                 bullets.splice(i,1)
             }
@@ -459,7 +467,7 @@ const pauseFunction = (e) =>{
             console.log('unpaused')
             end(pausedScreenId)
             drawScreenId = setInterval(draw,10);
-            selectAlienId = setInterval(selectAlien,200)
+            selectAlienId = setInterval(selectAlien,alienFrequency)
         } else if (pause && aliensDefeated && bossLoaded){
             console.log('paused')
             end(bossScreenId)
@@ -469,7 +477,7 @@ const pauseFunction = (e) =>{
             console.log('paused')
             end(pausedScreenId)
             bossScreenId = setInterval(drawBossScreen,10)
-            bossGunsId = setInterval(bossGunsFire,200)
+            bossGunsId = setInterval(bossGunsFire,bossFrequency)
         }
     }
     }
@@ -478,6 +486,7 @@ const pauseFunction = (e) =>{
 const pauseScreen = () =>{
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     blinkingText('PAUSED',canvas.width/2,canvas.height/2,500,'lime',60);
+    blinkingText('Press P to unpause',canvas.width/2, canvas.height/1.75,500,'lime',40)
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const deathCheck = () =>{
@@ -501,15 +510,13 @@ const winCheck = () =>{
     if (deletedRows < 1){
         deletedRows = 0
     }
-        end(draw)
         aliensDefeated = true;
-        
     }
 }
 
 const bossLoad = () =>{
     if (aliensDefeated){
-        console.log('you have defeated the bad guys')
+        // console.log('you have defeated the bad guys')
         end(drawScreenId)
         end(selectAlienId)
         loadBossScreen();
@@ -587,7 +594,7 @@ const loadScreen = () => {
 const playGame = () => {
     end(loadScreenId)
     drawScreenId = setInterval(draw, 10)
-    selectAlienId = setInterval(selectAlien, 333);
+    selectAlienId = setInterval(selectAlien, alienFrequency);
 }
 
 
@@ -614,10 +621,10 @@ const drawBossScreen = () =>{
 }
 
 const loadBossScreen = ()=>{
-    console.log('Load Boss Screen function working')
+    // console.log('Load Boss Screen function working')
     bossScreenId = setInterval(drawBossScreen,10);
     setTimeout(function(){
-        bossGunsId = setInterval(bossGunsFire,200) 
+        bossGunsId = setInterval(bossGunsFire,bossFrequency) 
     },2500)}
  
 
