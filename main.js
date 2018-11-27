@@ -21,7 +21,7 @@ imgShip.src = "./img/starfighter.svg";
 
 //Variable to describe the aliens
 
-let alienColumnCount = 1;
+let alienColumnCount = 11;
 let alienRowCount = 5;
 let alienWidth = 60;
 let alienHeight = 60;
@@ -48,7 +48,8 @@ let lives =[];
 let boss = {
     x: 0,
     y: 0,
-    health: 300
+    health: 300,
+    lives:3
 }
 
 let pause = false;
@@ -114,6 +115,11 @@ function alienFire(alienBulletX,alienBulletY){
         let alienBullet = {x: alienBulletX, y: alienBulletY, status:1};
         alienBullets.push(alienBullet);
 }
+
+function bossFire(bossBulletX, bossBulletY){
+    let bossBullet = {x: bossBulletX, y: bossBulletY, status:1}
+    bossBullets.push(bossBullet)
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Variables to describe the bullets
@@ -157,7 +163,18 @@ const resetShip = () => {
     bullets=[];
 }
 
-
+const resetBossFight = () =>{
+    end(bossGunsId)
+    end(bossScreenId)
+    setTimeout(function(){
+        shipX = (canvas.width - shipWidth) / 2;
+        bulletX = (shipX + (shipWidth - bulletWidth) / 2);
+        bossGunsId = setInterval(bossGunsFire,200)
+        bossScreenId = setInterval(drawBossScreen,10)
+    },1000);
+    bossBullets = [];
+    bullets = []
+}
 
 const drawBullet = (array, speed, color) => {
     for (let i = 0; i < array.length; i++) {
@@ -204,10 +221,22 @@ const drawBoss = ()=>{
 }
 
 const drawBossHealth = ()=>{
-    if (boss.health< 0){
-        boss.health = 0
+    if (boss.health === 0 && boss.lives >0){
+        boss.health = 300;
+        boss.lives -=1
     }
-    ctx.fillStyle = 'red';
+    
+    let bossHealthBar
+
+    if (boss.lives === 2){
+        bossHealthBar = 'lime'
+    } else if (boss.lives === 1){
+        bossHealthBar = 'yellow'
+    } else if (boss.lives === 0){
+        bossHealthBar = 'red'
+    }
+    fillText(boss.health,canvas.width-40,50,bossHealthBar,17);
+    ctx.fillStyle = bossHealthBar;
     ctx.fillRect(canvas.width-50,60,20,(300 - (300 - boss.health))*2)
 }
 const drawHealth = () => {
@@ -223,6 +252,7 @@ const drawHealth = () => {
     } else {
         hbc = 'red';
     }
+    fillText("HEALTH: ", 70, canvas.height - 20, hbc,17);
     ctx.fillStyle = hbc;
     ctx.fillRect (110,canvas.height - 35,(100 - (100 - health))*2,20);
 }
@@ -230,7 +260,7 @@ const drawHealth = () => {
 const checkLife = () =>{
     if (health === 0 && life > 0){
         life -=1;
-        resetShip();
+        aliensDefeated ? resetBossFight():resetShip();
         lives[life].status=0;
         health = 100;
     }
@@ -265,12 +295,7 @@ const randomIndex = (min,max) => {
     return randomIndex;
 }
 const selectAlien = () => {
-    let alienRows = []
    if (!aliensDefeated){ 
-   for (let c = 0;c<alienColumnCount;c++){
-       alienRows.push(aliens[c].length-1)
-   }
-
     let a = randomIndex(0, alienColumnCount)
     let b = randomIndex(0, alienRowCount);
     if (aliens[a][b].status === 1){
@@ -279,6 +304,17 @@ const selectAlien = () => {
         alienFire(alienBulletX,alienBulletY);
     }else selectAlien();
 }
+}
+
+const bossGunsFire = () => {
+    if(bossLoaded){
+        let a = randomIndex(0,15)
+        if(boss.health > 0){
+            let bossBulletX = a*(canvas.width/15)+alienPadding
+            let bossBulletY = (bossY)
+            bossFire(bossBulletX,bossBulletY);
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,17 +412,17 @@ const collisionDetection = () => {
     }
 }
 
-const shipCollisionDetection = () => {
+const shipCollisionDetection = (array) => {
 
-    for (let i = 0; i < alienBullets.length; i++) {
-        if (alienBullets[i].x > shipX &&
-            alienBullets[i].x < shipX + shipWidth &&
-            alienBullets[i].y > shipTop &&
-            alienBullets[i].y < shipTop + shipHeight) {
-            alienBullets[i].status = 0;
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].x > shipX &&
+            array[i].x < shipX + shipWidth &&
+            array[i].y > shipTop &&
+            array[i].y < shipTop + shipHeight) {
+            array[i].status = 0;
             health -= bulletDamage;
             // console.log('You shot me boss')
-            alienBullets.splice(i, 1);
+            array.splice(i, 1);
         }
     }
 }
@@ -397,7 +433,7 @@ const bossCollisionDetection = ()=>{
             if( 
                 bullets[i].x > boss.x &&
                 bullets[i].x < boss.x+canvas.width &&
-                bullets[i].y < boss.y
+                bullets[i].y < boss.y-60
             ) {
                 boss.health -= 5;
                 console.log('Boss Health: '+boss.health)
@@ -424,14 +460,16 @@ const pauseFunction = (e) =>{
             end(pausedScreenId)
             drawScreenId = setInterval(draw,10);
             selectAlienId = setInterval(selectAlien,200)
-        } else if (pause && aliensDefeated){
+        } else if (pause && aliensDefeated && bossLoaded){
             console.log('paused')
             end(bossScreenId)
+            end(bossGunsId)
             pausedScreenId = setInterval(pauseScreen,10)
-        } else if (!pause && aliensDefeated){
+        } else if (!pause && aliensDefeated && bossLoaded){
             console.log('paused')
             end(pausedScreenId)
             bossScreenId = setInterval(drawBossScreen,10)
+            bossGunsId = setInterval(bossGunsFire,200)
         }
     }
     }
@@ -446,6 +484,14 @@ const deathCheck = () =>{
     if(life <= 0) {
         gameOver();
   }
+}
+const enemyBulletCheck = (array)=>{
+    for (i=0;i<array.length;i++){
+        if (array[i].y === canvas.height){
+            array[i].status = 0
+            array.splice(i,1)
+        }
+    }
 }
 
 const winCheck = () =>{
@@ -493,7 +539,8 @@ const draw = () => {
     drawLife();
     checkLife();
     collisionDetection();
-    shipCollisionDetection();
+    shipCollisionDetection(alienBullets);
+    enemyBulletCheck(alienBullets);
     deathCheck();
     winCheck();
     bossLoad();
@@ -508,6 +555,7 @@ let drawScreenId
 let selectAlienId
 let pausedScreenId;
 let bossScreenId;
+let bossGunsId
 
 const end = (func) => {
     clearInterval(func)
@@ -542,6 +590,7 @@ const playGame = () => {
     selectAlienId = setInterval(selectAlien, 333);
 }
 
+
 const drawBossScreen = () =>{
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawShip();
@@ -552,19 +601,26 @@ const drawBossScreen = () =>{
     moveBoss();
     
     if (bossLoaded){
+       
         drawBullet(bullets,bulletSpeed,'lime');
-        // drawBullet(bossBullets,-bulletSpeed,'blue');
+        drawBullet(bossBullets,-bulletSpeed,'blue');
+        enemyBulletCheck(bossBullets);
         drawBossHealth();
     }
-    shipCollisionDetection();
+    shipCollisionDetection(bossBullets);
     bossCollisionDetection();
     checkLife();
     deathCheck();
 }
+
 const loadBossScreen = ()=>{
     console.log('Load Boss Screen function working')
     bossScreenId = setInterval(drawBossScreen,10);
-}
+    setTimeout(function(){
+        bossGunsId = setInterval(bossGunsFire,200) 
+    },2500)}
+ 
+
 const gameOver = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     end(drawScreenId)
@@ -574,6 +630,7 @@ const gameOver = () => {
     ctx.fillText("GAME OVER ", canvas.width / 2, canvas.height / 2);
     ctx.fillText("Press Enter", canvas.width / 2, 100 + canvas.height / 2);
     }
+
 const spaceBalti = () => {
     if (enterPressed === false && !gameInProgress) {
         loadScreenId = setInterval(loadScreen,10);
