@@ -376,6 +376,10 @@ const checkLife = () =>{
         lives[life].status=0;
         health = 100;
     }
+    if (health > 100){
+        life += 1;
+        health = health -100;
+    }
 }
 
 const drawLife = () =>{
@@ -564,8 +568,8 @@ const shipCollisionDetection = (array,damage) => {
     for (let i = 0; i < array.length; i++) {
         if (array[i].x > shipX &&
             array[i].x < shipX + shipWidth &&
-            array[i].y > shipTop &&
-            array[i].y < shipTop + shipHeight) {
+            array[i].y + bulletHeight > shipY &&
+            array[i].y < shipY + shipHeight) {
             array[i].status = 0;
             health -= damage;
             // console.log('You shot me boss')
