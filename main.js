@@ -97,6 +97,8 @@ function keyUpHandler(e) {
         rightPressed = false;
     } else if (e.keyCode == 37) {
         leftPressed = false;
+    } else if (e.keyCode == 13) {
+        enterPressed = false;
     }
 }
 
@@ -110,13 +112,14 @@ var pew = new Audio('pew.wav');
 }
 
 function fire(e){
-    if(e.keyCode == 32){
+    e.preventDefault();
+    if(e.keyCode == 32 & gameInProgress){
         if (!aliensDefeated || bossLoaded){
-    let bullet = {x: bulletX, y: bulletY, status:1};
-    bullets.push(bullet);
-    fireSound();
-    }
-}
+        let bullet = {x: bulletX, y: bulletY, status:1};
+        bullets.push(bullet);
+        fireSound();
+        }
+    } else if(e.keyCode == 32 & !gameInProgress) return;
 }
 
 function alienFire(alienBulletX,alienBulletY){
@@ -477,7 +480,7 @@ const gameInit = (e)=>{
     gameInProgress = false;
     aliensDefeated = false;
     pause = false;
-    
+    waves = 2;
     loadScreenId = null;
     drawScreenId = null;
     selectAlienId = null;
@@ -547,7 +550,7 @@ const bossCollisionDetection = ()=>{
                  &&
                 bullets[i].y < boss.y + canvas.height*2/3 - 15
             ) {
-                boss.health -= 50;
+                boss.health -= 5;
                 // console.log('Boss Health: '+boss.health)
                 bullets[i].status = 0;
                 score += 5;
@@ -667,6 +670,7 @@ const moveBoss = () => {
         
 const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    fillText('WAVE: ' + (3-waves),canvas.width/2,40, 'lime',35);
     drawShip();
     drawAlien();
     drawBullet(bullets,bulletSpeed,'lime')
@@ -732,6 +736,8 @@ const playGame = () => {
 
 const drawBossScreen = () =>{
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!bossLoaded){blinkingText('GET READY', canvas.width/2,canvas.height/2,300,'lime',60)};
     drawShip();
     drawBoss();
     drawHealth();
@@ -796,7 +802,7 @@ spaceBalti();
 
 document.addEventListener("keydown", keyDownHandler, false)
 document.addEventListener("keyup", keyUpHandler, false)
-document.addEventListener('keydown', fire, false)
 document.addEventListener('keydown', spaceBalti, false)
 document.addEventListener('keydown',pauseFunction,false)
 document.addEventListener('keydown',gameInit,false)
+document.addEventListener('keydown', fire, false)
