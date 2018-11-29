@@ -121,9 +121,10 @@ function fire(e){
     if(e.keyCode == 32 & gameInProgress){
         if (!aliensDefeated || bossLoaded){
         let bullet = {x: bulletX, y: bulletY, status:1};
+        if (bullets.length < 3){
         bullets.push(bullet);
         fireSound();
-        }
+        }}
     } else if(e.keyCode == 32 & !gameInProgress) return;
 }
 
@@ -206,6 +207,7 @@ const resetShip = () => {
 
 const resetAliens = () =>{
     aliens = [];
+    bullets = [];
     alienBullets = [];
     aliensDefeated = false;
     deletedLeftColumns = 0;
@@ -337,6 +339,8 @@ const drawBossHealth = ()=>{
     }
     if (boss.lives === 0 && boss.health === 0){
         bossDefeated = true;
+        bullets = [];
+        bossBullets = [];
     }
     if (boss.lives === 2){
         bossHealthBar = 'lime'
@@ -658,6 +662,8 @@ const winCheck = () =>{
         waves -= 1;
     
         if (waves > 0){
+            bullets = [];
+            alienBullets = [];
         resetAliens();
         } else if (waves <= 0){
             waves = 0;

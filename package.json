@@ -1,0 +1,22 @@
+{
+  "name": "space-invaders",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewbeattie180/Space-Invaders.git"
+  },
+  "author": "Andrew Beattie, Elliot Wood, Kasir Abbas, Jake Francis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andrewbeattie180/Space-Invaders/issues"
+  },
+  "homepage": "https://github.com/andrewbeattie180/Space-Invaders#readme",
+  "dependencies": {
+    "node": "^11.2.0"
+  }
+}
