@@ -20,6 +20,9 @@ let shipY = canvas.height - (shipHeight + 70);
 let shipTop = (canvas.height - (shipHeight + 20));
 let imgShip = new Image();
 imgShip.src = "./img/starfighter.svg";
+let imgHeart = new Image();
+imgHeart.src = "./img/heart.svg";
+
 
 //Variable to describe the aliens
 
@@ -49,6 +52,7 @@ imgBoss.src ='./img/interceptor-ship.svg'
 
 let aliens = [];
 let lives =[];
+let hearts =[];
 let boss = {
     x: 0,
     y: 0,
@@ -123,6 +127,20 @@ function alienFire(alienBulletX,alienBulletY){
 function bossFire(bossBulletX, bossBulletY){
     let bossBullet = {x: bossBulletX, y: bossBulletY, status:1}
     bossBullets.push(bossBullet)
+}
+
+const randomHeart = (x,y) => {
+    let random = (Math.floor(Math.random()*100))/100;
+    console.log("random number = " + random)
+    if (random > 0.96) { //give a 4% chance of dropping a heart
+        dropHeart(x,y)
+    } else{
+        console.log('didnt drop owt boss');
+    }
+}
+function dropHeart(X,Y){
+        let heart = {x: X, y: Y, status:1};
+        hearts.push(heart);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -207,6 +225,17 @@ const drawBullet = (array, speed, color) => {
             }
         }
     }
+const drawHeart = (array, speed) => {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].status == 1) {
+                ctx.drawImage(imgHeart, array[i].x, array[i].y,50,50);
+                array[i].y += speed;
+            } else {
+                array[i].status = 0
+                array.splice(i, 1);
+                }
+            }
+        }
 
 
 const drawAlien = () => {
@@ -428,6 +457,8 @@ const collisionDetection = () => {
                         bullets[i].y < alien.y + alienHeight
                     ) {
                         alien.status = 0 //alien dies
+
+                        randomHeart(alien.x, alien.y);
                         // var die = new Audio('die.wav'); // variable for alien dieing sound
                         // die.play(); // ALIEN MAKES DIEING SOUND WHEN DYING
                         score += 5;
@@ -440,7 +471,7 @@ const collisionDetection = () => {
     }
 }
 
-const shipCollisionDetection = (array) => {
+const shipCollisionDetection = (array,damage) => {
 
     for (let i = 0; i < array.length; i++) {
         if (array[i].x > shipX &&
@@ -448,7 +479,7 @@ const shipCollisionDetection = (array) => {
             array[i].y > shipTop &&
             array[i].y < shipTop + shipHeight) {
             array[i].status = 0;
-            health -= bulletDamage;
+            health -= damage;
             // console.log('You shot me boss')
             array.splice(i, 1);
         }
@@ -580,13 +611,15 @@ const draw = () => {
     drawShip();
     drawAlien();
     drawBullet(bullets,bulletSpeed,'lime')
+    drawHeart(hearts,-bulletSpeed * 0.2)
     drawHealth();
     moveAliens();
     moveShip();
     drawLife();
     checkLife();
     collisionDetection();
-    shipCollisionDetection(alienBullets);
+    shipCollisionDetection(alienBullets,bulletDamage);
+    shipCollisionDetection(hearts,-3*bulletDamage);
     enemyBulletCheck(alienBullets);
     deathCheck();
     winCheck();
@@ -655,7 +688,7 @@ const drawBossScreen = () =>{
         enemyBulletCheck(bossBullets);
         drawBossHealth();
     }
-    shipCollisionDetection(bossBullets);
+    shipCollisionDetection(bossBullets,bulletDamage);
     bossCollisionDetection();
     checkLife();
     deathCheck();
