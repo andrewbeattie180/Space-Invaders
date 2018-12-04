@@ -18,9 +18,9 @@ const shipHeight = 80;
 let shipX = (canvas.width - shipWidth) / 2; //initial location of the ship (X axis)
 let shipY = canvas.height - (shipHeight + 70); //initial location of the ship (Y axis)
 const imgShip = new Image();
-imgShip.src = ".starfighter.svg";
+imgShip.src = "./starfighter.svg";
 const imgHeart = new Image();
-imgHeart.src = ".heart.svg";
+imgHeart.src = "./heart.svg";
 
 
 //Variable to describe the aliens
