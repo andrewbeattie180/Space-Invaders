@@ -369,7 +369,7 @@ if (alienOffSetLeft > canvas.width - alienWidth * (alienColumnCount - deletedRig
 if (canvas.height - ((alienRowCount - deletedRows) * (alienHeight + alienPadding) + alienOffSetTop) > shipHeight * 2) {
     dy = dy;
 } else {
-    lives -=1;
+    playerLife -=1;
     resetAliens();
 }
 };
