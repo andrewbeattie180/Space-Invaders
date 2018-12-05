@@ -18,9 +18,9 @@ const shipHeight = 80;
 let shipX = (canvas.width - shipWidth) / 2; //initial location of the ship (X axis)
 let shipY = canvas.height - (shipHeight + 70); //initial location of the ship (Y axis)
 const imgShip = new Image();
-imgShip.src = "./starfighter.svg";
+imgShip.src = "./img/starfighter.svg";
 const imgHeart = new Image();
-imgHeart.src = "./heart.svg";
+imgHeart.src = "./img/heart.svg";
 
 
 //Variable to describe the aliens
@@ -45,10 +45,10 @@ let imgAlien1 = new Image();
 let imgAlien2 = new Image();
 let imgAlien3 = new Image();
 let imgBoss = new Image();
-imgAlien1.src = './cooking-pot.svg'
-imgAlien2.src = './alien-bug.svg'
-imgAlien3.src = './scout-ship.svg'
-imgBoss.src ='./interceptor-ship.svg'
+imgAlien1.src = './img/cooking-pot.svg'
+imgAlien2.src = './img/alien-bug.svg'
+imgAlien3.src = './img/scout-ship.svg'
+imgBoss.src ='./img/interceptor-ship.svg'
 
 let aliens = [];
 let lives =[];
@@ -267,7 +267,7 @@ const drawAlien = () => {
 const drawBoss = ()=>{
     boss.x = bossX + bossPadding
     boss.y = bossY - canvas.height*2/3
-    ctx.drawImage(imgBoss,boss.x,boss.y, canvas.width*2/3, canvas.height*2/3)
+    ctx.drawImage(imgBoss,boss.x,boss.y, 512, 512)
 }
 
 const drawBossHealth = ()=>{
