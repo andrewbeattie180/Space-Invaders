@@ -118,7 +118,7 @@ var pew = new Audio('pew.wav');
 const fire = (e) => {
     e.preventDefault();
     console.log('Game in Progress? ', gameInProgress)
-    if(e.keyCode == 32 && gameInProgress){
+    if(e.keyCode == 32 && gameInProgress && !pause){
         console.log("hello")
         if (!aliensDefeated || bossLoaded){
         let bullet = {x: bulletX, y: bulletY, status:1};
@@ -126,7 +126,7 @@ const fire = (e) => {
         bullets.push(bullet);
         fireSound();
         }}
-    } else if (e.keyCode == 32 && !gameInProgress){
+    } else if (e.keyCode == 32 && !gameInProgress && !pause){
         console.log("goodbye")
 
         // e.preventDefault();
@@ -915,7 +915,7 @@ const runGame = () =>{
         loadScreenId = null;
         console.log ('close log screen, loadscreenId = ' , loadScreenId)
     }
-    if (enterPressed === true && !gameInProgress) {
+    if (enterPressed === true && !gameInProgress && !creditsScreenDisplayed) {
         enterPressed = false;
         gameInProgress = true;
         playGame();
