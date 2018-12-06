@@ -608,8 +608,6 @@ const collisionDetection = () => {
                         alien.status = 0 //alien dies
 
                         randomHeart(alien.x, alien.y);
-                        // var die = new Audio('die.wav'); // variable for alien dieing sound
-                        // die.play(); // ALIEN MAKES DIEING SOUND WHEN DYING
                         score += 5;
                         bullets[i].status = 0 //bullet dies
                         bullets.splice(i, 1) //
@@ -666,7 +664,7 @@ const pauseFunction = (e) =>{
             end(drawScreenId)
             end(selectAlienId)
             pausedScreenId = setInterval(pauseScreen,10)
-            errorCheck();
+            // errorCheck();
         } else if(!pause && !aliensDefeated){
             console.log('unpaused')
             end(pausedScreenId)
@@ -716,7 +714,7 @@ const creditsScreenFunction = (e) =>{
                 loadScreenId = undefined;
                 creditScreenId = setInterval(creditsScreen,10);
                 console.log('credits shown - error check')
-                errorCheck();
+                // errorCheck();
             } else if (!creditsScreenDisplayed){
                 console.log('credits hidden');
                 end(creditScreenId);
@@ -780,7 +778,7 @@ let bossDestroyed = false;
 
         
 const draw = () => {
-    errorCheck();
+    // errorCheck();
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     fillText('WAVE: ' + (3-waves),canvas.width/2,40, 'lime',35);
@@ -906,7 +904,7 @@ if (e.keyCode == 13){
 }
 
 const runGame = () =>{
-    errorCheck();
+    // errorCheck();
     if (!enterPressed && !gameInProgress && !creditsScreenDisplayed) {
         console.log("this is loadscreen ID ", loadScreenId);
         loadScreenId = setInterval(loadScreen,10);
