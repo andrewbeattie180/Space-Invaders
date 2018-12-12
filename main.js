@@ -926,7 +926,6 @@ const spaceBalti = (e) => {
 }
 
 const runGame = () => {
-    // errorCheck();
     if (!enterPressed && !gameInProgress && !creditsScreenDisplayed) {
         console.log("this is loadscreen ID ", loadScreenId);
         loadScreenId = setInterval(loadScreen, 10);
