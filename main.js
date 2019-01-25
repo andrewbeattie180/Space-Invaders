@@ -119,7 +119,7 @@ const fire = (e) => {
     e.preventDefault();
     console.log('Game in Progress? ', gameInProgress)
     if (e.keyCode == 32 && gameInProgress && !pause) {
-        console.log("hello")
+        // console.log("hello")
         if (!aliensDefeated || bossLoaded) {
             let bullet = {
                 x: bulletX,
@@ -132,15 +132,15 @@ const fire = (e) => {
             }
         }
     } else if (e.keyCode == 32 && !gameInProgress && !pause) {
-        console.log("goodbye")
+        // console.log("goodbye")
 
         // e.preventDefault();
         // loadScreenId = null;
         // errorCheck();
         // gameInit();
         // spaceBalti();
-    } else {
-        //do nothing
+        // } else {
+        // do nothing
     }
 }
 
