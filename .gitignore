@@ -19,3 +19,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/.vs/Space-Invaders/config/applicationhost.config
+/.vs/Space-Invaders/FileContentIndex
+/.vs/Space-Invaders/v17/TestStore/0
+/.vs/VSWorkspaceState.json
+/.vs/Space-Invaders/v17/.suo
+/.vs/Space-Invaders/v17
+/.vs/slnx.sqlite
