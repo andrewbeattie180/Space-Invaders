@@ -1,42 +1,42 @@
-﻿ const gameConstants = {
-	 baseDX: 0.2,
-	 baseDY: -20,
-	 columnCount: 4,
-	 alienWidth: 30,
-	 alienHeight: 30,
-	 playerWidth: 70,
-	 playerHeight: 70,
-	 padding: 7,
-	 rowCount: 1,
-	 frequency: 300
+const gameConstants = {
+	baseDX: 1,
+	baseDY: -20,
+	columnCount: 4,
+	alienWidth: 30,
+	alienHeight: 30,
+	playerWidth: 70,
+	playerHeight: 70,
+	alienPadding: 7,
+	rowCount: 1,
+	frequency: 300
 }
 
- const gameSettings = {
+const gameSettings = {
 	bulletWidth: 3,
 	bulletHeight: 10,
 	maxPlayerBullets: 4,
 	enableSound: false,
-	initialLevels: 4,
-	bossDifficulty: 4,
+	initialLevels: 5,
+	bossLevels: 4,
 	colors: {
 		base: 'lime',
 		shield: '#4A90E2',
 		warning: 'yellow',
 		alert: 'red',
-		white: '#111'
+		white: '#ffffff'
 	}
 }
 
- const imageSources = {
-	 player: './images/starfighter.svg',
-	 boss: './images/interceptor-ship.svg',
-	 alienOne: './images/spaceship.svg',
-	 alienTwo: './images/alien-bug.svg',
-	 alienThree: './images/scout-ship.svg',
-	 heart: './images/heart.svg',
-	 life: './images/heart-plus.svg',
-	 shield: './images/shield.svg',
-	 powerUp: './images/cooking-pot.svg'
+const imageSources = {
+	player: './images/starfighter.svg',
+	boss: './images/interceptor-ship.svg',
+	alienOne: './images/spaceship.svg',
+	alienTwo: './images/alien-bug.svg',
+	alienThree: './images/scout-ship.svg',
+	heart: './images/heart.svg',
+	life: './images/heart-plus.svg',
+	shield: './images/shield.svg',
+	powerUp: './images/cooking-pot.svg'
 }
 
 const canvas = document.getElementById("myCanvas");
@@ -178,7 +178,7 @@ class Star extends Bullet {
 		}
 		ctx.fill();
 		this.y += this.speed;
-    }
+	}
 }
 
 class BasePowerUp extends BaseObject {
@@ -201,10 +201,15 @@ class BasePowerUp extends BaseObject {
 		ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
 		this.y += this.#speed;
 	}
+	destroy() {
+		super.destroy();
+		gameData.score += this.bonusPoints;
+	}
 }
 
 class Heart extends BasePowerUp {
 	damage = -30;
+	bonusPoints = 5;
 	constructor(x, y) {
 		super(x, y, imageSources.heart);
 	}
@@ -212,6 +217,7 @@ class Heart extends BasePowerUp {
 
 class Shield extends BasePowerUp {
 	damage = 0;
+	bonusPoints = 10;
 	constructor(x, y) {
 		super(x, y, imageSources.shield);
 	}
@@ -219,6 +225,7 @@ class Shield extends BasePowerUp {
 
 class Life extends BasePowerUp {
 	damage = -100;
+	bonusPoints = 40;
 	constructor(x, y) {
 		super(x, y, imageSources.life);
 	}
@@ -230,10 +237,6 @@ class Bonus extends BasePowerUp {
 	constructor(x, y) {
 		super(x, y, imageSources.powerUp);
 	}
-	destroy() {
-		super.destroy();
-		gameData.score += this.bonusPoints;
-    }
 }
 
 class Alien extends BaseObject {
@@ -286,29 +289,28 @@ class AlienThree extends Alien {
 }
 
 class BossAlien extends BaseObject {
-	lives = gameSettings.bossDifficulty;
+	lives = gameSettings.bossLevels;
 	health = 300;
 	loaded = false;
 	defeated = false;
 	frequency = 300;
+	power = this.lives > 1
+		? 10
+		: 15;
 	healthBarColor = gameSettings.colors.base;
 	dX = 1;
 	dY = 0.01 * gameConstants.baseDY;
 
-	constructor(x = (canvas.width) / 6 , y = -(canvas.height * 2 / 3)) {
+	constructor(x = (canvas.width) / 6, y = -(canvas.height * 2 / 3)) {
 		super(x, y, canvas.height * 2 / 3, (canvas.width * 2 / 3));
 		this.image.src = imageSources.boss;
-	}
-
-	speedUp() {
-		this.frequency = this.frequency / 1.66;
 	}
 
 	fire() {
 		if (this.loaded && this.health > 0 && !this.defeated) {
 			let a = randomIndex(1, 15);
 			let fireFromX = this.x + (a * (this.width / 15));
-			gameData.alienBullets.push(new Bullet(fireFromX, this.y + this.height, this.healthBarColor, 7));
+			gameData.alienBullets.push(new Bullet(fireFromX, this.y + this.height, this.healthBarColor, this.power));
 		}
 	}
 
@@ -317,9 +319,9 @@ class BossAlien extends BaseObject {
 
 		if (this.y + this.height > 300) {
 			this.loaded = true;
-		}	
+		}
 
-		if (this.loaded) {
+		if (this.loaded && !gameData.bossDefeated) {
 			this.x += this.dX;
 
 			//bounces wall to wall horizontally
@@ -337,12 +339,17 @@ class BossAlien extends BaseObject {
 					this.dY = 2;
 				} else {
 					this.dY = 0;
+					saveScore();
+					gameData.score = Math.floor((gameData.tempSavedScore * (1 + this.lives) * (1 + (this.health / 100))));
 					gameData.bossDefeated = true;
 				}
 			}
 		}
-
 	}
+
+	speedUp() {
+		this.frequency -= 50;
+    }
 
 	draw() {
 		ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
@@ -354,7 +361,7 @@ class BossAlien extends BaseObject {
 		if (!this.defeated && this.loaded) {
 			fillText(this.health, canvas.width - 40, 50, this.healthBarColor, 17);
 			ctx.fillStyle = this.healthBarColor;
-			ctx.fillRect(canvas.width - 50, 60, 20, (300 - (300 - this.health)) * 2);
+			ctx.fillRect(canvas.width - 50, 60, 20, (300 - (300 - this.health)) * 1.5);
 		}
 	}
 
@@ -366,8 +373,9 @@ class BossAlien extends BaseObject {
 
 	takeDamage(damage) {
 		this.health -= damage;
-		triggerPowerUpDrop(this.x + (this.width/2), this.y + this.height);
+		triggerPowerUpDrop(this.x + (this.width / 2), this.y + this.height);
 		this.healthCheck();
+		gameData.score++;
 	}
 
 	healthCheck() {
@@ -375,6 +383,7 @@ class BossAlien extends BaseObject {
 			this.health = 300;
 			this.lives -= 1;
 			this.speedUp();
+			resetBossFight();
 		} else if (this.lives <= 0 && this.health <= 0) {
 			this.defeated = true;
 			gameData.alienBullets = [];
@@ -399,7 +408,7 @@ class BossAlien extends BaseObject {
 		this.dX = 1;
 		this.dY = 0.01 * gameData.alienGrid.dy;
 		this.health = 300;
-		this.lives = gameSettings.bossDifficulty;
+		this.lives = gameSettings.bossLevels;
 		this.loaded = false;
 		this.defeated = false;
 		gameData.bossDefeated = false;
@@ -464,7 +473,7 @@ class Player extends BaseObject {
 		fillText("LIVES: ", 79, canvas.height - 45, gameSettings.colors.base, 17);
 
 		for (let c = 0; c < this.lives; c++) {
-			let lifeX = c * (30 + gameConstants.padding) + (50 + ctx.measureText("LIVES: ").width)
+			let lifeX = c * (30 + gameConstants.alienPadding) + (50 + ctx.measureText("LIVES: ").width)
 			let lifeY = (canvas.height - 65);
 			gameData.lives[c] = new BasePowerUp(lifeX, lifeY, this.image.src);
 			gameData.lives[c].setHeight(25);
@@ -474,14 +483,16 @@ class Player extends BaseObject {
 	}
 	engageHyperSpace() {
 		this.hyperSpaceEngaged = true;
-		resetStars(20);
-    }
+		resetStars(5);
+	}
 
 	reset() {
 		super.reset();
 		this.health = 100;
 		this.lives = 5;
+		this.hyperSpaceEngaged = false;
 		gameData.score = 0;
+		gameData.tempSavedScore = 0;
 	}
 
 
@@ -503,13 +514,13 @@ class Player extends BaseObject {
 
 		if (this.hasShield) {
 			this.drawShield();
-        }
+		}
 	}
 
 	drawShield() {
 		var centerX = this.x + (this.width / 2);
 		var centerY = this.y + (this.height / 2);
-		var radius = Math.sqrt(((this.width /2) ** 2) + ((this.height/2) ** 2));
+		var radius = Math.sqrt(((this.width / 2) ** 2) + ((this.height / 2) ** 2));
 		ctx.lineWidth = 3;
 		ctx.strokeStyle = gameSettings.colors.shield;
 		ctx.beginPath();
@@ -518,11 +529,11 @@ class Player extends BaseObject {
 	}
 
 	takeDamage(damage) {
-		this.health -= this.hasShield ? 2 :damage;
+		this.health -= this.hasShield ? 2 : damage;
 	}
 	removeShield() {
 		this.hasShield = false;
-    }
+	}
 
 	collisionDetection(array) {
 		if (this.status == 1) {
@@ -537,7 +548,7 @@ class Player extends BaseObject {
 					if (item instanceof Shield) {
 						this.hasShield = true;
 						gameIntervals.playerShieldId = setTimeout(removeShield, 10000);
-                    }
+					}
 					array.splice(i, 1);
 				}
 			}
@@ -558,15 +569,15 @@ class Player extends BaseObject {
 			var centerPoint = (canvas.width - this.width) / 2;
 			if (this.x > centerPoint + 10) {
 				this.x -= 10;
-			}	else if (this.x < centerPoint - 10) {
+			} else if (this.x < centerPoint - 10) {
 				this.x += 10;
 			} else {
 				this.x = centerPoint;
 				this.y -= 3;
 				if (!this.hyperSpaceEngaged) {
 					this.engageHyperSpace();
-                }
-			} 
+				}
+			}
 			if (this.y < 0) {
 				this.y -= 0
 				gameOver();
@@ -602,6 +613,7 @@ let gameData = {
 		enterPressed: false
 	},
 	score: 0,
+	tempSavedScore: 0,
 	levels: gameSettings.initialLevels,
 	powerUps: [],
 	aliens: [],
@@ -622,15 +634,15 @@ let gameData = {
 		deletedRightColumns: 0,
 		deletedLeftColumns: 0,
 		offsetTop: 70,
-		offsetLeft: 5,
-		dx: 0.2,
-		dy: -20
+		offsetLeft: gameConstants.alienPadding,
+		dx: gameConstants.baseDX,
+		dy: gameConstants.baseDY
 	},
 
 	creditsScreenDisplayed: false
 }
 
-const getAlienByIndex = (index) =>{
+const getAlienByIndex = (index) => {
 	switch (index) {
 		case 0:
 			return new AlienOne();
@@ -654,7 +666,7 @@ const randomiseAliens = () => {
 		default:
 			return new AlienOne();
 			break;
-    }
+	}
 }
 
 const initialiseAliens = () => {
@@ -663,10 +675,10 @@ const initialiseAliens = () => {
 	for (let c = 0; c < currentLevel * gameConstants.columnCount; c++) {
 		gameData.aliens[c] = [];
 		for (let r = 0; r < currentLevel * gameConstants.rowCount; r++) {
-					gameData.aliens[c][r] = randomiseAliens();
-			}
+			gameData.aliens[c][r] = randomiseAliens();
 		}
 	}
+}
 
 
 const resetAliens = () => {
@@ -681,9 +693,9 @@ const resetGrid = () => {
 	gameData.alienGrid.deletedLeftColumns = 0;
 	gameData.alienGrid.deletedRows = 0;
 	gameData.alienGrid.deletedRightColumns = 0;
-	gameData.alienGrid.dx = 0.2;
-	gameData.alienGrid.dy = -20
-	gameData.alienGrid.offsetLeft = 5;
+	gameData.alienGrid.dx = gameConstants.baseDX;
+	gameData.alienGrid.dy = gameConstants.baseDY;
+	gameData.alienGrid.offsetLeft = gameConstants.alienPadding;
 	gameData.alienGrid.offsetTop = 70;
 }
 
@@ -699,7 +711,6 @@ const resetBossFight = () => {
 	end(gameIntervals.bossGunsId)
 	end(gameIntervals.bossScreenId)
 	setTimeout(function () {
-		gameData.player.center();
 		gameIntervals.bossGunsId = setInterval(bossFire, gameData.boss.frequency);
 		gameIntervals.bossScreenId = setInterval(drawBossScreen, 10);
 	}, 1000);
@@ -771,7 +782,7 @@ const triggerPowerUpDrop = (x, y) => {
 		case (random > 0.12 && random < 0.14):
 			gameData.powerUps.push(new Bonus(x, y));
 			break;
-    }
+	}
 }
 
 const removeShield = () => {
@@ -834,8 +845,7 @@ const drawBullets = (array) => {
 				&& bullet.y > gameSettings.bulletHeight
 				&& bullet.y < canvas.height
 				&& bullet.x > 0
-				&& bullet.x + bullet.width < canvas.width)
-			{
+				&& bullet.x + bullet.width < canvas.width) {
 				bullet.draw();
 			} else {
 				bullet.destroy();
@@ -885,7 +895,7 @@ const drawAliens = () => {
 }
 
 const drawScore = () => {
-	fillText("SCORE: " + gameData.score, 630, 685, "lime", 40);
+	fillText("SCORE: " + gameData.score, canvas.width - 200, canvas.height - 30, "lime", 40);
 }
 
 
@@ -910,26 +920,29 @@ const lastRowHandler = () => {
 
 const lastColumnHandler = () => {
 	let lastColumn = [];
-	for (let c = 0; c < gameData.aliens[gameData.aliens.length - 1 - gameData.alienGrid.deletedRightColumns].length; c++) {
-		lastColumn.push(gameData.aliens[gameData.aliens.length - 1 - gameData.alienGrid.deletedRightColumns][c].status)
+	let lastColumnIndex = gameData.aliens.length - 1 - gameData.alienGrid.deletedRightColumns;
+
+	for (let c = 0; c < gameData.aliens[lastColumnIndex].length; c++) {
+		lastColumn.push(gameData.aliens[lastColumnIndex][c].status)
 	}
 	let lastColumnStatus = lastColumn.reduce((a, b) => a + b, 0)
 	if (lastColumnStatus === 0) {
-		gameData.alienGrid.deletedRightColumns += 1
+		gameData.alienGrid.deletedRightColumns++;
 	}
 }
 const firstColumnHandler = () => {
-	let firstColumn = [];
-	for (let r = 0; r < gameData.aliens[0 + gameData.alienGrid.deletedLeftColumns].length; r++) {
-		firstColumn.push(gameData.aliens[0 + gameData.alienGrid.deletedLeftColumns][r].status)
+	let firstColumn = []
+	let firstColumnIndex = gameData.alienGrid.deletedLeftColumns;
+	for (let c = 0; c < gameData.aliens[firstColumnIndex].length; c++) {
+		firstColumn.push(gameData.aliens[firstColumnIndex][c].status)
 	}
 	let firstColumnStatus = firstColumn.reduce((a, b) => a + b, 0);
 	if (firstColumnStatus === 0) {
-		gameData.alienGrid.deletedLeftColumns += 1
+		gameData.alienGrid.deletedLeftColumns++;
 	}
 }
 
-const gridHandler = () => {
+const checkForDeletedRowsAndColumns = () => {
 	if (!gameData.aliensDefeated) {
 		firstColumnHandler();
 		lastColumnHandler();
@@ -938,22 +951,36 @@ const gridHandler = () => {
 }
 
 const moveAliens = () => {
-	gridHandler();
+	checkForDeletedRowsAndColumns();
 	drawBullets(gameData.alienBullets);
 
+	//push the entire grid either left or right depending on dx
 	gameData.alienGrid.offsetLeft += gameData.alienGrid.dx;
+
 	let currentLevel = gameSettings.initialLevels - gameData.levels + 1;
 
+	//Calculate the distance between where the grid started and
+	//where it is now based on number of deleted columns on the left hand side
+	//Plus buffer space
+
+	let distanceToLeftSideBoundary = gameData.alienGrid.offsetLeft + (gameData.alienGrid.deletedLeftColumns * (gameConstants.alienWidth + gameConstants.alienPadding)) - gameConstants.alienPadding;
+
+	//Calculate the distance between the edge of the grid and the canvas right hand side
+	//this depends on the number of columns deleted on the RHS
+	//Plus buffer space
+	let currentGridWidth = ((currentLevel * gameConstants.columnCount) - gameData.alienGrid.deletedRightColumns) * (gameConstants.alienWidth + gameConstants.alienPadding);
+	let distanceToRightSideBoundary = canvas.width - (gameData.alienGrid.offsetLeft + currentGridWidth - gameConstants.alienPadding);
+
 	//Has the grid reached the horizontal borders - if so turn around
-	if (gameData.alienGrid.offsetLeft > canvas.width - gameConstants.alienWidth * ((currentLevel * gameConstants.columnCount) - gameData.alienGrid.deletedRightColumns) - 70
-		|| gameData.alienGrid.offsetLeft + (gameData.alienGrid.deletedLeftColumns * gameConstants.alienWidth) < 5) {
+	if (distanceToRightSideBoundary < 0 || distanceToLeftSideBoundary < 0) {
 		gameData.alienGrid.dx = -gameData.alienGrid.dx;
 		gameData.alienGrid.offsetTop -= gameData.alienGrid.dy;
 	}
 
-	//Has the grid reached too low - if so reset but lose a life
-	if (canvas.height - (((currentLevel * gameConstants.rowCount) - gameData.alienGrid.deletedRows) * (gameConstants.alienHeight + gameConstants.padding) + gameData.alienGrid.offsetTop) <= 160) {
+	//Has the grid reached too low - if so reset but lose a life and reset score
+	if (canvas.height - (((currentLevel * gameConstants.rowCount) - gameData.alienGrid.deletedRows) * (gameConstants.alienHeight + gameConstants.alienPadding) + gameData.alienGrid.offsetTop) <= 160) {
 		gameData.player.takeDamage(100);
+		gameData.score = gameData.tempSavedScore;
 		resetAliens();
 	}
 }
@@ -967,7 +994,7 @@ const selectAlien = () => {
 			gameData.aliens[a][b].fire();
 		} else {
 			selectAlien();
-        }
+		}
 	}
 }
 
@@ -986,7 +1013,7 @@ const alienCollisionDetection = () => {
 
 const creditsScreen = () => {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	fillText('CREDITS', canvas.width/2, canvas.height/2, gameSettings.colors.base, 40);
+	fillText('CREDITS', canvas.width / 2, canvas.height / 2, gameSettings.colors.base, 40);
 	fillText('Based on the original Space Balti by', canvas.width / 2, (canvas.height / 2) + 40, gameSettings.colors.base, 30);
 	fillText('Andrew Beattie, Jake Francis, Kasir Abbas, Elliot Wood', canvas.width / 2, (canvas.height / 2) + 70, gameSettings.colors.base, 20);
 	fillText('Game icons from: game-icons.net', canvas.width / 2, (canvas.height / 2) + 100, gameSettings.colors.base, 25);
@@ -1057,13 +1084,12 @@ const pauseScreen = () => {
 const winCheck = () => {
 	let currentLevel = gameSettings.initialLevels - gameData.levels + 1;
 
-	if (gameData.alienGrid.deletedLeftColumns + gameData.alienGrid.deletedRightColumns > currentLevel * gameConstants.columnCount) {
+	if (gameData.alienGrid.deletedLeftColumns + gameData.alienGrid.deletedRightColumns >= currentLevel * gameConstants.columnCount) {
 		gameData.alienGrid.deletedLeftColumns = 0;
 		gameData.alienGrid.deletedRightColumns = 0;
-		if (gameData.alienGrid.deletedRows < 1) {
-			gameData.alienGrid.deletedRows = 0
-		}
+		gameData.alienGrid.deletedRows = 0
 		gameData.levels -= 1;
+		gameData.tempSavedScore = gameData.score;
 
 		if (gameData.levels > 0) {
 			resetBullets();
@@ -1095,6 +1121,13 @@ const createStar = () => {
 		: 5;
 
 	gameData.stars.push(new Star(speed));
+}
+
+const saveScore = () => {
+	gameData.tempSavedScore = gameData.score;
+}
+const loadScore = () => {
+	gameData.score = gameData.tempSavedScore;
 }
 
 const draw = () => {
@@ -1150,6 +1183,7 @@ const playGame = () => {
 const drawBossScreen = () => {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	drawStars();
+	drawScore();
 	gameData.player.draw();
 	gameData.player.move();
 	gameData.player.collisionDetection(gameData.alienBullets);
@@ -1182,15 +1216,14 @@ const gameOver = () => {
 	end(gameIntervals.bossScreenId)
 	end(gameIntervals.bossGunsId);
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	let finalScore = Math.floor((gameData.score * (1 + gameData.player.lives) * (1 + (gameData.player.health / 100))));
 	ctx.font = '55px Arial';
 	ctx.fillStyle = gameSettings.colors.base;
 	ctx.fillText(
 		gameData.bossDefeated
-			? "THANK YOU BOSSMAN"
+			? "THANK YOU FOR PLAYING"
 			: "GAME OVER"
 		, canvas.width / 2, canvas.height / 2);
-	ctx.fillText("FINAL SCORE: " + finalScore, canvas.width / 2, 70 + canvas.height / 2);
+	ctx.fillText("FINAL SCORE: " + gameData.score, canvas.width / 2, 70 + canvas.height / 2);
 	ctx.fillText("Press Enter to restart", canvas.width / 2, 150 + canvas.height / 2);
 	gameData.bossDefeated = true;
 }
